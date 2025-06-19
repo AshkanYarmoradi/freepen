@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pong - Secure Chat Rooms",
+  title: "freepen - Secure Chat Rooms",
   description: "A secure chat application with private rooms",
 };
 

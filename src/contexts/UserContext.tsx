@@ -14,8 +14,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Keys for storing data in localStorage
-const AUTHENTICATED_ROOMS_KEY = 'pong_authenticated_rooms';
-const USER_NAME_KEY = 'pong_user_name';
+const AUTHENTICATED_ROOMS_KEY = 'freepen_authenticated_rooms';
+const USER_NAME_KEY = 'freepen_user_name';
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState<string>('Anonymous');

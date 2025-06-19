@@ -21,7 +21,7 @@ export const sessionOptions = {
     // In production, throw an error if SESSION_SECRET is not set
     throw new Error('SESSION_SECRET environment variable must be set in production');
   })(),
-  cookieName: 'pong_session',
+  cookieName: 'freepen_session',
   cookieOptions: {
     // Always set secure to true unless explicitly in development
     secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV !== 'development',

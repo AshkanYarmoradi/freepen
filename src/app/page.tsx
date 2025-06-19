@@ -25,7 +25,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">Pong Chat</h1>
+          <h1 className="text-3xl font-bold text-gray-900">freepen Chat</h1>
         </div>
       </header>
 
@@ -33,7 +33,7 @@ export default function Home() {
         <div className="px-4 py-6 sm:px-0">
           <div className="bg-white overflow-hidden shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Welcome to Pong Chat</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Welcome to Freepen Chat</h2>
 
               <div className="max-w-md mx-auto">
                 <div className="mb-6">

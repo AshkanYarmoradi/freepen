@@ -1,6 +1,6 @@
-# Pong - Secure Chat Room Application
+# freepen - Secure Chat Room Application
 
-Pong is a secure chat application built with Next.js and Firebase. It allows users to create private chat rooms protected by passwords and invite others to join these rooms for secure communication.
+freepen is a secure chat application built with Next.js and Firebase. It allows users to create private chat rooms protected by passwords and invite others to join these rooms for secure communication.
 
 ## Features
 
