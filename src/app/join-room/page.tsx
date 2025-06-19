@@ -20,7 +20,6 @@ const joinRoomSchema = z.object({
 type JoinRoomFormValues = z.infer<typeof joinRoomSchema>;
 
 export default function JoinRoomPage() {
-  const { userName } = useUserContext();
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,12 +32,16 @@ export default function JoinRoomPage() {
     resolver: zodResolver(joinRoomSchema),
   });
 
+  const { userName, addAuthenticatedRoom } = useUserContext();
+
   const onSubmit = async (data: JoinRoomFormValues) => {
     setIsLoading(true);
     setServerError(null);
 
     try {
       await joinRoom(data.roomId, data.password, userName);
+      // Add the room to authenticated rooms list
+      addAuthenticatedRoom(data.roomId);
       router.push(`/room/${data.roomId}`);
     } catch (error: any) {
       setServerError(error.message || 'An error occurred while joining the room');

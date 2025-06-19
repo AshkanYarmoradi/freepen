@@ -2,17 +2,53 @@
 
 import React, {useState, useEffect, useRef, use} from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/contexts/UserContext';
 import Button from '@/components/ui/Button';
-import { Message, sendMessage, useRoomMessages } from '@/lib/db';
+import Input from '@/components/ui/Input';
+import { Message, sendMessage, useRoomMessages, joinRoom } from '@/lib/db';
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const { userName } = useUserContext();
+  const router = useRouter();
+  const { userName, isRoomAuthenticated, addAuthenticatedRoom } = useUserContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { id } = use(params);
+
+  // State for password authentication
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [password, setPassword] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Check if user is authenticated for this room
+  useEffect(() => {
+    if (id && !isRoomAuthenticated(id)) {
+      setShowPasswordPrompt(true);
+    }
+  }, [id, isRoomAuthenticated]);
+
+  // Handle room authentication
+  const handleAuthenticate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!password.trim()) return;
+
+    setIsAuthenticating(true);
+    setAuthError(null);
+
+    try {
+      await joinRoom(id, password, userName);
+      addAuthenticatedRoom(id);
+      setShowPasswordPrompt(false);
+    } catch (error: any) {
+      setAuthError(error.message || 'Failed to authenticate. Please check your password.');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -20,8 +56,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   }, [messages]);
 
   useEffect(() => {
-    // Set up a real-time listener for messages
-    if (id) {
+    // Set up a real-time listener for messages only if authenticated
+    if (id && !showPasswordPrompt) {
       const unsubscribe = useRoomMessages(id, (newMessages) => {
         setMessages(newMessages);
       });
@@ -29,7 +65,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       // Clean up listener on unmount
       return () => unsubscribe();
     }
-  }, [id]);
+  }, [id, showPasswordPrompt]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,65 +103,104 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col">
-        <div className="flex-1 bg-white shadow rounded-lg overflow-hidden flex flex-col">
-          {/* Messages area */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            {messages.length === 0 ? (
-              <div className="h-full flex items-center justify-center">
-                <p className="text-gray-500">No messages yet. Start the conversation!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.userName === userName ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs sm:max-w-md px-4 py-2 rounded-lg ${
-                        message.userName === userName 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-200 text-gray-900'
-                      }`}
-                    >
-                      {message.userName !== userName && (
-                        <div className="font-semibold text-xs mb-1">
-                          {message.userName}
-                        </div>
-                      )}
-                      <p>{message.text}</p>
-                      <div className="text-xs mt-1 opacity-70">
-                        {message.createdAt?.toDate().toLocaleTimeString() || 'Just now'}
-                      </div>
-                    </div>
+        {showPasswordPrompt ? (
+          <div className="bg-white shadow rounded-lg p-6 max-w-md mx-auto">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Enter Room Password</h2>
+            <p className="text-gray-600 mb-6">
+              This room is password protected. Please enter the password to access the chat.
+            </p>
+
+            {authError && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700">{authError}</p>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Message input */}
-          <div className="border-t border-gray-200 p-4">
-            <form onSubmit={handleSendMessage} className="flex space-x-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={isSending}
-              />
+            <form onSubmit={handleAuthenticate}>
+              <div className="mb-4">
+                <Input
+                  label="Room Password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                />
+              </div>
               <Button
                 type="submit"
-                isLoading={isSending}
-                disabled={!newMessage.trim()}
+                className="w-full"
+                isLoading={isAuthenticating}
+                disabled={!password.trim()}
               >
-                Send
+                Join Room
               </Button>
             </form>
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 bg-white shadow rounded-lg overflow-hidden flex flex-col">
+            {/* Messages area */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              {messages.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-gray-500">No messages yet. Start the conversation!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${message.userName === userName ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-xs sm:max-w-md px-4 py-2 rounded-lg ${
+                          message.userName === userName 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-200 text-gray-900'
+                        }`}
+                      >
+                        {message.userName !== userName && (
+                          <div className="font-semibold text-xs mb-1">
+                            {message.userName}
+                          </div>
+                        )}
+                        <p>{message.text}</p>
+                        <div className="text-xs mt-1 opacity-70">
+                          {message.createdAt?.toDate().toLocaleTimeString() || 'Just now'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Message input */}
+            <div className="border-t border-gray-200 p-4">
+              <form onSubmit={handleSendMessage} className="flex space-x-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type your message..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isSending}
+                />
+                <Button
+                  type="submit"
+                  isLoading={isSending}
+                  disabled={!newMessage.trim()}
+                >
+                  Send
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
