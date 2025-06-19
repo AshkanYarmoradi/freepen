@@ -1,15 +1,4 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  onSnapshot,
-  Timestamp,
-} from 'firebase/firestore';
+import { onSnapshot, query, collection, where, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Types
@@ -28,56 +17,55 @@ export interface Message {
   roomId: string;
 }
 
-// Helper function to hash password (in a real app, use a proper hashing library)
-export const hashPassword = async (password: string): Promise<string> => {
-  // This is a simple hash for demonstration purposes
-  // In a production app, use a proper hashing library like bcrypt
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-};
-
 // Room operations
-export const createRoom = async (name: string, password: string) => {
+export const createRoom = async (name: string, password: string, userName?: string) => {
   try {
-    // Hash the password for security
-    const passwordHash = await hashPassword(password);
-
-    // Create a new room document
-    const roomRef = await addDoc(collection(db, 'rooms'), {
-      name,
-      passwordHash,
-      createdAt: serverTimestamp(),
+    const response = await fetch('/api/rooms/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name,
+        password,
+        userName,
+      }),
     });
 
-    return roomRef.id;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create room');
+    }
+
+    const data = await response.json();
+    return data.roomId;
   } catch (error) {
     console.error('Error creating room:', error);
     throw error;
   }
 };
 
-export const joinRoom = async (roomId: string, password: string) => {
+export const joinRoom = async (roomId: string, password: string, userName: string) => {
   try {
-    // Get the room document
-    const roomDoc = await getDoc(doc(db, 'rooms', roomId));
+    const response = await fetch('/api/rooms/join', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        roomId,
+        password,
+        userName,
+      }),
+    });
 
-    if (!roomDoc.exists()) {
-      throw new Error('Room not found');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to join room');
     }
 
-    const roomData = roomDoc.data() as Room;
-
-    // Verify the password
-    const passwordHash = await hashPassword(password);
-    if (passwordHash !== roomData.passwordHash) {
-      throw new Error('Incorrect password');
-    }
-
-    return roomId;
+    const data = await response.json();
+    return data.roomId;
   } catch (error) {
     console.error('Error joining room:', error);
     throw error;
@@ -87,12 +75,22 @@ export const joinRoom = async (roomId: string, password: string) => {
 // Message operations
 export const sendMessage = async (roomId: string, text: string, userName: string) => {
   try {
-    await addDoc(collection(db, 'messages'), {
-      text,
-      roomId,
-      userName: userName || 'Anonymous',
-      createdAt: serverTimestamp(),
+    const response = await fetch('/api/messages/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        roomId,
+        text,
+        userName,
+      }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to send message');
+    }
   } catch (error) {
     console.error('Error sending message:', error);
     throw error;
