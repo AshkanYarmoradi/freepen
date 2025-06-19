@@ -110,11 +110,11 @@ export const joinRoom = async (roomId: string, password: string, userName: strin
  * Send a message to a room
  * @param roomId The ID of the room to send the message to
  * @param text The text content of the message
- * @param userName The username of the message sender
+ * @param userName Optional username of the message sender (if not provided, uses session username)
  * @returns Promise that resolves when the message is sent successfully
  * @throws Error if sending the message fails
  */
-export const sendMessage = async (roomId: string, text: string, userName: string): Promise<void> => {
+export const sendMessage = async (roomId: string, text: string, userName?: string): Promise<void> => {
   try {
     const response = await fetch('/api/messages/send', {
       method: 'POST',

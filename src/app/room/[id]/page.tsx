@@ -12,6 +12,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sessionUserName, setSessionUserName] = useState(userName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { id } = use(params);
 
@@ -27,6 +28,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     const checkAuthentication = async () => {
       // Refresh the user session to get the updated userName
       await refreshUserSession();
+      // Update the sessionUserName state variable with the latest userName
+      setSessionUserName(userName);
 
       if (id && !isRoomAuthenticated(id)) {
         setShowPasswordPrompt(true);
@@ -34,7 +37,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     };
 
     checkAuthentication();
-  }, [id, isRoomAuthenticated, refreshUserSession]);
+  }, [id, isRoomAuthenticated, refreshUserSession, userName]);
 
   // Handle room authentication
   const handleAuthenticate = async (e: React.FormEvent) => {
@@ -52,6 +55,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
       // Refresh the user session to get the updated userName
       await refreshUserSession();
+      // Update the sessionUserName state variable with the latest userName
+      setSessionUserName(userName);
 
       addAuthenticatedRoom(id);
       setShowPasswordPrompt(false);
@@ -92,8 +97,11 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     try {
       // Refresh the user session to get the updated userName before sending the message
       await refreshUserSession();
+      // Update the sessionUserName state variable with the latest userName
+      setSessionUserName(userName);
 
-      await sendMessage(id, newMessage.trim(), userName);
+      // Don't pass userName, let the API use the session userName
+      await sendMessage(id, newMessage.trim());
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -114,7 +122,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
           </div>
           <div>
             <span className="text-gray-700">
-              {userName || 'Anonymous'}
+              {sessionUserName || 'Anonymous'}
             </span>
           </div>
         </div>
@@ -180,16 +188,16 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                   {messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.userName === userName ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.userName === sessionUserName ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
                         className={`max-w-xs sm:max-w-md px-4 py-2 rounded-lg ${
-                          message.userName === userName 
+                          message.userName === sessionUserName 
                             ? 'bg-blue-600 text-white' 
                             : 'bg-gray-200 text-gray-900'
                         }`}
                       >
-                        {message.userName !== userName && (
+                        {message.userName !== sessionUserName && (
                           <div className="font-semibold text-xs mb-1">
                             {message.userName}
                           </div>
