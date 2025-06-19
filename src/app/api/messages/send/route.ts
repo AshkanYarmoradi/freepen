@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Apply rate limiting
     try {
       await limiter.check(request, 30); // 30 messages per minute
-    } catch (_error) {
+    } catch {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Apply rate limiting
     try {
       await limiter.check(request, 10); // 10 requests per minute
-    } catch (_error) {
+    } catch {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }

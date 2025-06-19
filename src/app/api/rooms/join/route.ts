@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Apply rate limiting - stricter for join attempts to prevent brute force
     try {
       await limiter.check(request, 15); // 15 requests per minute
-    } catch (error) {
+    } catch {
       // Add a delay to further discourage brute force attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       name: roomData.name,
       success: true 
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error joining room:', error);
     return NextResponse.json(
       { error: 'Failed to join room' },

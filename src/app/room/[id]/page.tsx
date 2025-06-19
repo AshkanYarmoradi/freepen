@@ -54,27 +54,19 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Function to handle message subscription
-  const subscribeToMessages = (roomId: string, callback: (messages: Message[]) => void) => {
-    let unsubscribe = () => {};
-
-    // Only set up the subscription if authenticated
-    if (roomId && !showPasswordPrompt) {
-      unsubscribe = subscribeToRoomMessages(roomId, callback);
-    }
-
-    return unsubscribe;
-  };
-
   useEffect(() => {
     // Set up a real-time listener for messages only if authenticated
-    const unsubscribe = subscribeToMessages(id, (newMessages) => {
-      setMessages(newMessages);
-    });
+    let unsubscribe = () => {};
+
+    if (id && !showPasswordPrompt) {
+      unsubscribe = subscribeToRoomMessages(id, (newMessages) => {
+        setMessages(newMessages);
+      });
+    }
 
     // Clean up listener on unmount
     return () => unsubscribe();
-  }, [id, showPasswordPrompt, subscribeToMessages]);
+  }, [id, showPasswordPrompt]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

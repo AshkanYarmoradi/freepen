@@ -1,5 +1,5 @@
 import { adminDb } from './firebase-admin';
-import { serverTimestamp } from 'firebase-admin/firestore';
+import { serverTimestamp, FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 // Security event types
 export enum SecurityEventType {
@@ -21,8 +21,8 @@ export interface SecurityEvent {
   ip?: string;
   userAgent?: string;
   path?: string;
-  details?: any;
-  timestamp: any;
+  details?: Record<string, unknown>;
+  timestamp: FieldValue | Timestamp;
 }
 
 /**
@@ -32,7 +32,7 @@ export interface SecurityEvent {
 export async function logSecurityEvent(
   type: SecurityEventType,
   request: Request,
-  details?: any,
+  details?: Record<string, unknown>,
   userId?: string,
   userName?: string
 ) {
@@ -42,7 +42,7 @@ export async function logSecurityEvent(
     const path = url.pathname;
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
-    
+
     // Create the security event
     const event: SecurityEvent = {
       type,
@@ -54,10 +54,10 @@ export async function logSecurityEvent(
       details,
       timestamp: serverTimestamp(),
     };
-    
+
     // Log to Firestore
     await adminDb.collection('securityLogs').add(event);
-    
+
     // Also log to console for development
     console.log(`[SECURITY] ${type}:`, {
       path,
@@ -66,9 +66,9 @@ export async function logSecurityEvent(
       userName,
       details,
     });
-    
+
     return true;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error logging security event:', error);
     return false;
   }
@@ -83,7 +83,7 @@ export async function checkSuspiciousIP(ip: string): Promise<boolean> {
     // Get recent security events for this IP
     const sixHoursAgo = new Date();
     sixHoursAgo.setHours(sixHoursAgo.getHours() - 6);
-    
+
     const snapshot = await adminDb
       .collection('securityLogs')
       .where('ip', '==', ip)
@@ -98,10 +98,10 @@ export async function checkSuspiciousIP(ip: string): Promise<boolean> {
       ])
       .where('timestamp', '>=', sixHoursAgo)
       .get();
-    
+
     // If there are more than 5 suspicious events in the last 6 hours, mark as suspicious
     return snapshot.size >= 5;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error checking suspicious IP:', error);
     return false;
   }
@@ -119,12 +119,12 @@ export async function getUserSecurityEvents(userId: string, limit = 100) {
       .orderBy('timestamp', 'desc')
       .limit(limit)
       .get();
-    
+
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     }));
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error getting user security events:', error);
     return [];
   }

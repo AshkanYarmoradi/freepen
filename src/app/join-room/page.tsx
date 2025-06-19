@@ -43,8 +43,12 @@ export default function JoinRoomPage() {
       // Add the room to authenticated rooms list
       addAuthenticatedRoom(data.roomId);
       router.push(`/room/${data.roomId}`);
-    } catch (error: any) {
-      setServerError(error.message || 'An error occurred while joining the room');
+    } catch (error: unknown) {
+      setServerError(
+        error instanceof Error 
+          ? error.message 
+          : 'An error occurred while joining the room'
+      );
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,5 @@
 import { getIronSession, IronSessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
-import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
 // Define the session data structure

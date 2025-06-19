@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Apply rate limiting
     try {
       await limiter.check(request, 10); // 10 requests per minute
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     await addAuthenticatedRoom(roomRef.id);
 
     return NextResponse.json({ roomId: roomRef.id }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating room:', error);
     return NextResponse.json(
       { error: 'Failed to create room' },

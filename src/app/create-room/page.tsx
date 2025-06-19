@@ -25,7 +25,7 @@ type RoomFormValues = z.infer<typeof roomSchema>;
 
 export default function CreateRoomPage() {
   const router = useRouter();
-  const { userName, addAuthenticatedRoom } = useUserContext();
+  const { addAuthenticatedRoom } = useUserContext();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,8 +46,12 @@ export default function CreateRoomPage() {
       // Add the room to authenticated rooms list
       addAuthenticatedRoom(roomId);
       router.push(`/room/${roomId}`);
-    } catch (error: any) {
-      setServerError(error.message || 'An error occurred while creating the room');
+    } catch (error: unknown) {
+      setServerError(
+        error instanceof Error 
+          ? error.message 
+          : 'An error occurred while creating the room'
+      );
     } finally {
       setIsLoading(false);
     }

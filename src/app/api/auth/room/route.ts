@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Apply rate limiting
     try {
       await limiter.check(request, 15); // 15 requests per minute
-    } catch (_error) {
+    } catch {
       // Add a delay to further discourage brute force attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
 

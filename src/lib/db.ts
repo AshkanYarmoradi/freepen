@@ -135,7 +135,7 @@ export const sendMessage = async (roomId: string, text: string, userName: string
  * @returns Unsubscribe function to stop listening for updates
  */
 export const subscribeToRoomMessages = (
-  roomId: string, 
+  roomId: string,
   callback: (messages: Message[]) => void
 ): Unsubscribe => {
   // Create a query for messages in this room, ordered by creation time
