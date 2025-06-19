@@ -16,7 +16,6 @@ export const sessionOptions = {
   password: process.env.SESSION_SECRET || (() => {
     // In development, generate a random password if SESSION_SECRET is not set
     if (process.env.NODE_ENV !== 'production') {
-      const crypto = require('crypto');
       return crypto.randomBytes(32).toString('hex');
     }
     // In production, throw an error if SESSION_SECRET is not set
