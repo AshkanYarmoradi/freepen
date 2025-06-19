@@ -8,12 +8,17 @@ import Input from '@/components/ui/Input';
 import { Message, sendMessage, subscribeToRoomMessages, joinRoom } from '@/lib/db';
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const { userName, isRoomAuthenticated, addAuthenticatedRoom, refreshUserSession } = useUserContext();
+  const { userName, isRoomAuthenticated, addAuthenticatedRoom, refreshUserSession, setUserName } = useUserContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sessionUserName, setSessionUserName] = useState(userName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Update sessionUserName whenever userName changes
+  useEffect(() => {
+    setSessionUserName(userName);
+  }, [userName]);
   const { id } = use(params);
 
   // State for password authentication
@@ -23,21 +28,24 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Check if user is authenticated for this room
+  // Check if user is authenticated for this room and update sessionUserName
   useEffect(() => {
     const checkAuthentication = async () => {
       // Refresh the user session to get the updated userName
-      await refreshUserSession();
+      const updatedUserName = await refreshUserSession();
       // Update the sessionUserName state variable with the latest userName
-      setSessionUserName(userName);
+      setSessionUserName(updatedUserName);
 
       if (id && !isRoomAuthenticated(id)) {
         setShowPasswordPrompt(true);
+      } else {
+        // User is already authenticated for this room, ensure we have the latest userName
+        setShowPasswordPrompt(false);
       }
     };
 
     checkAuthentication();
-  }, [id, isRoomAuthenticated, refreshUserSession, userName]);
+  }, [id, isRoomAuthenticated, refreshUserSession]);
 
   // Handle room authentication
   const handleAuthenticate = async (e: React.FormEvent) => {
@@ -51,12 +59,19 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     try {
       // Use the name input if provided, otherwise use the existing userName
       const nameToUse = nameInput.trim() || userName;
-      await joinRoom(id, password, nameToUse);
+      const result = await joinRoom(id, password, nameToUse);
 
-      // Refresh the user session to get the updated userName
-      await refreshUserSession();
-      // Update the sessionUserName state variable with the latest userName
-      setSessionUserName(userName);
+      // Update the userName in the UserContext
+      if (result.userName) {
+        setUserName(result.userName);
+        // Update the sessionUserName state variable with the returned userName
+        setSessionUserName(result.userName);
+      } else {
+        // Refresh the user session to get the updated userName as a fallback
+        await refreshUserSession();
+        // Update the sessionUserName state variable with the latest userName
+        setSessionUserName(userName);
+      }
 
       addAuthenticatedRoom(id);
       setShowPasswordPrompt(false);
@@ -96,9 +111,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
     try {
       // Refresh the user session to get the updated userName before sending the message
-      await refreshUserSession();
+      const updatedUserName = await refreshUserSession();
       // Update the sessionUserName state variable with the latest userName
-      setSessionUserName(userName);
+      setSessionUserName(updatedUserName);
 
       // Don't pass userName, let the API use the session userName
       await sendMessage(id, newMessage.trim());

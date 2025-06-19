@@ -72,10 +72,10 @@ export const createRoom = async (name: string, password: string, userName?: stri
  * @param roomId The ID of the room to join
  * @param password The password for the room
  * @param userName The username of the user joining the room
- * @returns Promise resolving to the joined room ID
+ * @returns Promise resolving to an object containing the joined room ID and the user's name
  * @throws Error if joining the room fails
  */
-export const joinRoom = async (roomId: string, password: string, userName: string): Promise<string> => {
+export const joinRoom = async (roomId: string, password: string, userName: string): Promise<{ roomId: string, userName: string }> => {
   try {
     const response = await fetch('/api/rooms/join', {
       method: 'POST',
@@ -95,7 +95,10 @@ export const joinRoom = async (roomId: string, password: string, userName: strin
     }
 
     const data = await response.json();
-    return data.roomId;
+    return {
+      roomId: data.roomId,
+      userName: data.userName || userName
+    };
   } catch (error) {
     console.error('Error joining room:', error);
     throw error;

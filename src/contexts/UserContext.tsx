@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 interface UserContextType {
   userName: string;
@@ -30,39 +30,59 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   // Function to refresh user session data from the server
-  const refreshUserSession = async () => {
+  const refreshUserSession = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/session');
       if (response.ok) {
         const data = await response.json();
         if (data.isLoggedIn && data.userName) {
           handleSetUserName(data.userName);
+          return data.userName;
         }
       }
+      return userName; // Return current userName if no update
     } catch (error) {
       console.error('Error refreshing user session:', error);
+      return userName; // Return current userName on error
     }
-  };
+  }, [userName, handleSetUserName]);
 
-  // Load authenticated rooms and userName from localStorage on initial render
+  // Load authenticated rooms and userName from localStorage and server on initial render
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Load authenticated rooms
-      const storedRooms = localStorage.getItem(AUTHENTICATED_ROOMS_KEY);
-      if (storedRooms) {
+    const initializeSession = async () => {
+      if (typeof window !== 'undefined') {
+        // Load authenticated rooms
+        const storedRooms = localStorage.getItem(AUTHENTICATED_ROOMS_KEY);
+        if (storedRooms) {
+          try {
+            setAuthenticatedRooms(JSON.parse(storedRooms));
+          } catch (error) {
+            console.error('Error parsing authenticated rooms from localStorage:', error);
+          }
+        }
+
+        // Load userName
+        const storedUserName = localStorage.getItem(USER_NAME_KEY);
+        if (storedUserName) {
+          setUserName(storedUserName);
+        }
+
+        // Fetch session from server to ensure client state is in sync
         try {
-          setAuthenticatedRooms(JSON.parse(storedRooms));
+          const updatedUserName = await refreshUserSession();
+          if (updatedUserName && updatedUserName !== userName) {
+            handleSetUserName(updatedUserName);
+          }
         } catch (error) {
-          console.error('Error parsing authenticated rooms from localStorage:', error);
+          console.error('Error initializing session from server:', error);
         }
       }
+    };
 
-      // Load userName
-      const storedUserName = localStorage.getItem(USER_NAME_KEY);
-      if (storedUserName) {
-        setUserName(storedUserName);
-      }
-    }
+    initializeSession();
+
+    // We only want to run this effect once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Add a room to the authenticated rooms list

@@ -202,6 +202,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       authenticated: true,
       roomId,
+      userName: session.userName,
     });
   } catch (error: Error | unknown) {
     console.error('Error authenticating for room:', error);

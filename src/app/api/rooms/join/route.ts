@@ -96,15 +96,20 @@ export async function POST(request: NextRequest) {
     // If user is not logged in, create a session for them
     if (!session.isLoggedIn) {
       await createSession(userName);
+    } else if (userName && userName.trim() !== '') {
+      // Update the userName if provided and user is already logged in
+      session.userName = userName.trim();
+      await session.save();
     }
 
     // Add the room to the user's authenticated rooms list
     await addAuthenticatedRoom(roomId);
 
-    // Password is valid, return success
+    // Password is valid, return success with userName
     return NextResponse.json({ 
       roomId,
       name: roomData!.name,
+      userName: session.userName,
       success: true 
     });
   } catch (error: unknown) {
