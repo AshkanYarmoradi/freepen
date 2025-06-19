@@ -287,6 +287,156 @@ Please ensure your code follows the project's coding standards and includes appr
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Troubleshooting
+
+### Common Installation Issues
+
+1. **Node.js Version Compatibility**
+   - **Issue**: Build errors or unexpected behavior
+   - **Solution**: Ensure you're using Node.js v18 or higher. Use `nvm` to manage Node.js versions:
+     ```bash
+     nvm install 18
+     nvm use 18
+     ```
+
+2. **Firebase Configuration**
+   - **Issue**: "Firebase app already exists" error
+   - **Solution**: This typically happens in development with hot reloading. Refresh the page to resolve.
+
+3. **Environment Variables**
+   - **Issue**: "Missing environment variables" error
+   - **Solution**: Double-check your `.env.local` file contains all required variables listed in the setup section.
+   - **Note**: Remember that environment variables starting with `NEXT_PUBLIC_` are exposed to the browser.
+
+4. **Firestore Permissions**
+   - **Issue**: "Permission denied" errors when accessing Firestore
+   - **Solution**: Verify your Firestore security rules are properly configured and that your Firebase Admin SDK credentials are correct.
+
+5. **Build Errors**
+   - **Issue**: TypeScript errors during build
+   - **Solution**: Run `npm run type-check` to identify and fix type issues before building.
+
+### Deployment Troubleshooting
+
+1. **Vercel Deployment**
+   - **Issue**: Environment variables not working
+   - **Solution**: Ensure all environment variables are properly set in the Vercel project settings.
+
+2. **Firebase Admin SDK**
+   - **Issue**: "Error: Failed to initialize Firebase Admin SDK"
+   - **Solution**: Verify that your `FIREBASE_PRIVATE_KEY` is properly formatted with newlines (`\n`).
+
+## Performance Considerations
+
+### Client-Side Optimization
+
+1. **Bundle Size Management**
+   - The application uses dynamic imports to reduce initial load time
+   - Run `npm run analyze` to visualize bundle sizes and identify optimization opportunities
+
+2. **Image Optimization**
+   - Use the Next.js Image component for automatic image optimization
+   - Consider using WebP format for better compression
+
+3. **State Management**
+   - Use React Context API for global state that changes infrequently
+   - Consider using SWR or React Query for data fetching and caching
+
+### Server-Side Optimization
+
+1. **API Route Caching**
+   - Implement appropriate caching headers for API routes
+   - Use Edge Functions for latency-sensitive operations
+
+2. **Database Queries**
+   - Limit query results to reduce data transfer
+   - Use composite indexes for complex queries
+   - Implement pagination for large data sets
+
+3. **Firestore Best Practices**
+   - Use batch operations for multiple writes
+   - Implement denormalization for frequently accessed data
+   - Set up appropriate TTL (Time To Live) for temporary data
+
+## Browser Compatibility
+
+The application is tested and supported on the following browsers:
+
+| Browser | Minimum Version | Notes |
+|---------|----------------|-------|
+| Chrome | 90+ | Fully supported |
+| Firefox | 88+ | Fully supported |
+| Safari | 14+ | Fully supported |
+| Edge | 90+ | Fully supported |
+| Opera | 76+ | Fully supported |
+| iOS Safari | 14+ | Minor styling differences |
+| Android Chrome | 90+ | Minor styling differences |
+| Samsung Internet | 14+ | Minor styling differences |
+
+### Accessibility Considerations
+
+- The application is designed to meet WCAG 2.1 AA standards
+- Screen reader compatible with ARIA attributes
+- Keyboard navigation support
+- Color contrast ratios meet accessibility standards
+- Focus management for modal dialogs and dynamic content
+
+## Project Roadmap
+
+### Short-term Goals (Next 3 Months)
+
+- [ ] Implement end-to-end encryption for messages
+- [ ] Add file sharing capabilities
+- [ ] Enhance mobile experience with PWA features
+- [ ] Implement user profiles with avatars
+- [ ] Add typing indicators and read receipts
+
+### Medium-term Goals (3-6 Months)
+
+- [ ] Implement voice and video chat
+- [ ] Add support for message reactions and threads
+- [ ] Create a public room directory with discovery features
+- [ ] Implement advanced search functionality
+- [ ] Add integration with popular services (Google Drive, Dropbox, etc.)
+
+### Long-term Goals (6+ Months)
+
+- [ ] Develop a native mobile application
+- [ ] Implement AI-powered features (smart replies, content moderation)
+- [ ] Add support for plugins and extensions
+- [ ] Create an API for third-party integrations
+- [ ] Implement advanced analytics and insights
+
+## Frequently Asked Questions
+
+### General Questions
+
+**Q: Is freepen free to use?**  
+A: Yes, freepen is open-source and free to use under the MIT license.
+
+**Q: Can I self-host freepen?**  
+A: Yes, you can deploy freepen to your own infrastructure. Follow the deployment instructions in this README.
+
+**Q: Is my data encrypted?**  
+A: All data is transmitted over HTTPS. End-to-end encryption for messages is on our roadmap.
+
+### Technical Questions
+
+**Q: Can I contribute to freepen?**  
+A: Yes! See the Contributing section for details on how to contribute.
+
+**Q: How do I report a bug?**  
+A: Open an issue on GitHub with detailed steps to reproduce the bug.
+
+**Q: Can I use freepen in my commercial project?**  
+A: Yes, the MIT license allows commercial use.
+
+**Q: How do I customize the UI?**  
+A: The UI is built with TailwindCSS, which makes customization straightforward. Modify the tailwind.config.js file to change the theme.
+
+**Q: Does freepen support multiple languages?**  
+A: Internationalization is planned but not yet implemented. Contributions for this feature are welcome!
+
 ## Acknowledgements
 
 - [Next.js](https://nextjs.org/) - The React framework
