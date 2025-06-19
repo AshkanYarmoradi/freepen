@@ -19,7 +19,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   useEffect(() => {
     setSessionUserName(userName);
   }, [userName]);
-  const { id } = use(params);
+  // Handle both Promise and plain object cases for params
+  const { id } = params instanceof Promise ? use(params) : params;
 
   // State for password authentication
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);

@@ -25,7 +25,7 @@ type RoomFormValues = z.infer<typeof roomSchema>;
 
 export default function CreateRoomPage() {
   const router = useRouter();
-  const { addAuthenticatedRoom } = useUserContext();
+  const { userName, addAuthenticatedRoom } = useUserContext();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,7 +42,7 @@ export default function CreateRoomPage() {
     setServerError(null);
 
     try {
-      const roomId = await createRoom(data.name, data.password);
+      const roomId = await createRoom(data.name, data.password, userName);
       // Add the room to authenticated rooms list
       addAuthenticatedRoom(roomId);
       router.push(`/room/${roomId}`);

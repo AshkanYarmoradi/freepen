@@ -241,7 +241,10 @@ export async function GET(request: NextRequest) {
     // Check if the room is authenticated
     const authenticated = isRoomAuthenticated(session, roomId);
 
-    return NextResponse.json({ authenticated });
+    return NextResponse.json({ 
+      authenticated,
+      roomId
+    });
   } catch (error: Error | unknown) {
     console.error('Error checking room authentication:', error);
     return NextResponse.json(
