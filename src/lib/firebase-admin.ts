@@ -18,5 +18,7 @@ const firebaseAdmin = getApps().length === 0
 
 // Get Firestore instance
 const adminDb = getFirestore(firebaseAdmin);
+// Configure Firestore to ignore undefined properties
+adminDb.settings({ ignoreUndefinedProperties: true });
 
 export { adminDb, firebaseAdmin };
