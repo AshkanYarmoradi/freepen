@@ -1,6 +1,6 @@
 import { getIronSession, IronSessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 
 // Define the session data structure
@@ -28,7 +28,7 @@ export const sessionOptions: IronSessionOptions = {
 };
 
 // Get the session from the request
-export async function getSession(req?: NextRequest) {
+export async function getSession() {
   const cookieStore = await cookies();
   const session = await getIronSession<SessionData>(
     cookieStore,

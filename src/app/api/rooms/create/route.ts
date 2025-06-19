@@ -19,18 +19,30 @@ const createRoomSchema = z.object({
   userName: z.string().optional(),
 });
 
-// Secure password hashing with salt
+/**
+ * Securely hash a password with a random salt using PBKDF2
+ * @param password The plain text password to hash
+ * @returns Promise resolving to a string in the format "salt:hash"
+ * @throws Error if hashing fails
+ */
 const hashPassword = async (password: string): Promise<string> => {
   // Generate a random salt
   const salt = crypto.randomBytes(16).toString('hex');
 
   // Use PBKDF2 for secure password hashing
   return new Promise((resolve, reject) => {
-    crypto.pbkdf2(password, salt, 10000, 64, 'sha512', (err, derivedKey) => {
-      if (err) reject(err);
-      // Store both the salt and the hash
-      resolve(salt + ':' + derivedKey.toString('hex'));
-    });
+    crypto.pbkdf2(
+      password,
+      salt,
+      10000, // Number of iterations
+      64,    // Key length
+      'sha512', // Hash algorithm
+      (err, derivedKey) => {
+        if (err) reject(err);
+        // Store both the salt and the hash
+        resolve(`${salt}:${derivedKey.toString('hex')}`);
+      }
+    );
   });
 };
 

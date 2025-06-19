@@ -19,18 +19,35 @@ const roomAuthSchema = z.object({
   csrfToken: z.string().min(1, 'CSRF token is required'),
 });
 
-// Verify password against stored hash
+/**
+ * Verify a password against a stored hash
+ * @param password The plain text password to verify
+ * @param storedHash The stored hash in the format "salt:hash"
+ * @returns Promise resolving to true if the password matches, false otherwise
+ * @throws Error if verification fails
+ */
 const verifyPassword = async (password: string, storedHash: string): Promise<boolean> => {
   // Extract the salt and hash from the stored value
   const [salt, hash] = storedHash.split(':');
 
+  if (!salt || !hash) {
+    throw new Error('Invalid hash format');
+  }
+
   // Hash the provided password with the same salt
   return new Promise((resolve, reject) => {
-    crypto.pbkdf2(password, salt, 10000, 64, 'sha512', (err, derivedKey) => {
-      if (err) reject(err);
-      // Compare the hashes
-      resolve(hash === derivedKey.toString('hex'));
-    });
+    crypto.pbkdf2(
+      password,
+      salt,
+      10000, // Number of iterations
+      64,    // Key length
+      'sha512', // Hash algorithm
+      (err, derivedKey) => {
+        if (err) reject(err);
+        // Compare the hashes
+        resolve(hash === derivedKey.toString('hex'));
+      }
+    );
   });
 };
 
