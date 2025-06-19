@@ -1,6 +1,5 @@
 import { 
   SessionData, 
-  sessionOptions, 
   getSession, 
   createSession, 
   addAuthenticatedRoom, 
@@ -71,34 +70,34 @@ describe('session', () => {
       process.env.SESSION_SECRET = originalSessionSecret;
     });
 
-    it('should use SESSION_SECRET from environment if available', () => {
+    it('should use SESSION_SECRET from environment if available', async () => {
       process.env.SESSION_SECRET = 'test-secret';
       // Re-import to get fresh options
       jest.resetModules();
-      const { sessionOptions } = require('../../lib/session');
+      const { sessionOptions } = await import('../../lib/session');
       expect(sessionOptions.password).toBe('test-secret');
     });
 
-    it('should generate a random password in development if SESSION_SECRET is not set', () => {
+    it('should generate a random password in development if SESSION_SECRET is not set', async () => {
       process.env.NODE_ENV = 'development';
       process.env.SESSION_SECRET = undefined;
       // Re-import to get fresh options
       jest.resetModules();
-      const { sessionOptions } = require('../../lib/session');
+      const { sessionOptions } = await import('../../lib/session');
       expect(sessionOptions.password).toBe('mock-random-bytes');
     });
 
-    it('should set secure cookie option based on environment', () => {
+    it('should set secure cookie option based on environment', async () => {
       process.env.NODE_ENV = 'production';
       // Re-import to get fresh options
       jest.resetModules();
-      const { sessionOptions } = require('../../lib/session');
+      const { sessionOptions } = await import('../../lib/session');
       expect(sessionOptions.cookieOptions.secure).toBe(true);
 
       process.env.NODE_ENV = 'development';
       // Re-import to get fresh options
       jest.resetModules();
-      const { sessionOptions: devOptions } = require('../../lib/session');
+      const { sessionOptions: devOptions } = await import('../../lib/session');
       expect(devOptions.cookieOptions.secure).toBe(false);
     });
   });
@@ -106,9 +105,9 @@ describe('session', () => {
   describe('getSession', () => {
     it('should initialize a new session if not logged in', async () => {
       mockSession.isLoggedIn = false;
-      
+
       const session = await getSession();
-      
+
       expect(session.isLoggedIn).toBe(false);
       expect(session.userId).toBe('');
       expect(session.userName).toBe('');
@@ -122,9 +121,9 @@ describe('session', () => {
       mockSession.userName = 'Existing User';
       mockSession.authenticatedRooms = ['room1', 'room2'];
       mockSession.csrfToken = 'existing-csrf-token';
-      
+
       const session = await getSession();
-      
+
       expect(session.isLoggedIn).toBe(true);
       expect(session.userId).toBe('existing-user-id');
       expect(session.userName).toBe('Existing User');
@@ -136,7 +135,7 @@ describe('session', () => {
   describe('createSession', () => {
     it('should create a new session with the provided username', async () => {
       await createSession('Test User');
-      
+
       expect(mockSession.isLoggedIn).toBe(true);
       expect(mockSession.userId).toBe('mock-uuid-1');
       expect(mockSession.userName).toBe('Test User');
@@ -149,18 +148,18 @@ describe('session', () => {
   describe('addAuthenticatedRoom', () => {
     it('should add a room to authenticatedRooms if not already present', async () => {
       mockSession.authenticatedRooms = ['room1'];
-      
+
       await addAuthenticatedRoom('room2');
-      
+
       expect(mockSession.authenticatedRooms).toEqual(['room1', 'room2']);
       expect(mockSession.save).toHaveBeenCalled();
     });
 
     it('should not add a room if already present', async () => {
       mockSession.authenticatedRooms = ['room1', 'room2'];
-      
+
       await addAuthenticatedRoom('room2');
-      
+
       expect(mockSession.authenticatedRooms).toEqual(['room1', 'room2']);
       expect(mockSession.save).toHaveBeenCalled();
     });
@@ -175,7 +174,7 @@ describe('session', () => {
         authenticatedRooms: ['room1', 'room2'],
         csrfToken: 'csrf-token',
       };
-      
+
       expect(isRoomAuthenticated(session, 'room1')).toBe(true);
     });
 
@@ -187,7 +186,7 @@ describe('session', () => {
         authenticatedRooms: ['room1', 'room2'],
         csrfToken: 'csrf-token',
       };
-      
+
       expect(isRoomAuthenticated(session, 'room3')).toBe(false);
     });
   });
@@ -201,7 +200,7 @@ describe('session', () => {
         authenticatedRooms: [],
         csrfToken: 'valid-csrf-token',
       };
-      
+
       expect(verifyCsrfToken(session, 'valid-csrf-token')).toBe(true);
     });
 
@@ -213,7 +212,7 @@ describe('session', () => {
         authenticatedRooms: [],
         csrfToken: 'valid-csrf-token',
       };
-      
+
       expect(verifyCsrfToken(session, 'invalid-csrf-token')).toBe(false);
     });
   });
