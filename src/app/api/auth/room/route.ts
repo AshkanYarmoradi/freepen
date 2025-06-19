@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Apply rate limiting
     try {
       await limiter.check(request, 15); // 15 requests per minute
-    } catch (error) {
+    } catch (_error) {
       // Add a delay to further discourage brute force attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
       authenticated: true,
       roomId,
     });
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Error authenticating for room:', error);
     return NextResponse.json(
       { error: 'Failed to authenticate for room' },
@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
     const authenticated = isRoomAuthenticated(session, roomId);
 
     return NextResponse.json({ authenticated });
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Error checking room authentication:', error);
     return NextResponse.json(
       { error: 'Failed to check room authentication' },

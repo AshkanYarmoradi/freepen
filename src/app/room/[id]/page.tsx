@@ -2,14 +2,12 @@
 
 import React, {useState, useEffect, useRef, use} from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/contexts/UserContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { Message, sendMessage, useRoomMessages, joinRoom } from '@/lib/db';
+import { Message, sendMessage, subscribeToRoomMessages, joinRoom } from '@/lib/db';
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const router = useRouter();
   const { userName, isRoomAuthenticated, addAuthenticatedRoom } = useUserContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -43,8 +41,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       await joinRoom(id, password, userName);
       addAuthenticatedRoom(id);
       setShowPasswordPrompt(false);
-    } catch (error: any) {
-      setAuthError(error.message || 'Failed to authenticate. Please check your password.');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to authenticate. Please check your password.';
+      setAuthError(errorMessage);
     } finally {
       setIsAuthenticating(false);
     }
@@ -55,17 +54,27 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Function to handle message subscription
+  const subscribeToMessages = (roomId: string, callback: (messages: Message[]) => void) => {
+    let unsubscribe = () => {};
+
+    // Only set up the subscription if authenticated
+    if (roomId && !showPasswordPrompt) {
+      unsubscribe = subscribeToRoomMessages(roomId, callback);
+    }
+
+    return unsubscribe;
+  };
+
   useEffect(() => {
     // Set up a real-time listener for messages only if authenticated
-    if (id && !showPasswordPrompt) {
-      const unsubscribe = useRoomMessages(id, (newMessages) => {
-        setMessages(newMessages);
-      });
+    const unsubscribe = subscribeToMessages(id, (newMessages) => {
+      setMessages(newMessages);
+    });
 
-      // Clean up listener on unmount
-      return () => unsubscribe();
-    }
-  }, [id, showPasswordPrompt]);
+    // Clean up listener on unmount
+    return () => unsubscribe();
+  }, [id, showPasswordPrompt, subscribeToMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

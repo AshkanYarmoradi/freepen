@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Apply rate limiting
     try {
       await limiter.check(request, 10); // 10 requests per minute
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
@@ -31,26 +31,26 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json();
     const result = sessionSchema.safeParse(body);
-    
+
     if (!result.success) {
       return NextResponse.json(
         { error: result.error.errors[0].message },
         { status: 400 }
       );
     }
-    
+
     // Sanitize the user name to prevent XSS
     const userName = DOMPurify.sanitize(result.data.userName);
-    
+
     // Create a new session
     const session = await createSession(userName);
-    
+
     return NextResponse.json({
       userId: session.userId,
       userName: session.userName,
       csrfToken: session.csrfToken,
     });
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Error creating session:', error);
     return NextResponse.json(
       { error: 'Failed to create session' },
@@ -60,17 +60,17 @@ export async function POST(request: NextRequest) {
 }
 
 // Get the current session
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getSession();
-    
+
     return NextResponse.json({
       isLoggedIn: session.isLoggedIn,
       userName: session.userName,
       userId: session.userId,
       csrfToken: session.csrfToken,
     });
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('Error getting session:', error);
     return NextResponse.json(
       { error: 'Failed to get session' },

@@ -134,7 +134,7 @@ export const sendMessage = async (roomId: string, text: string, userName: string
  * @param callback Function to call when messages are updated
  * @returns Unsubscribe function to stop listening for updates
  */
-export const useRoomMessages = (
+export const subscribeToRoomMessages = (
   roomId: string, 
   callback: (messages: Message[]) => void
 ): Unsubscribe => {
