@@ -1,5 +1,15 @@
-import { onSnapshot, query, collection, where, orderBy, Timestamp, Unsubscribe } from 'firebase/firestore';
-import { db } from './firebase';
+import { Timestamp, Unsubscribe } from 'firebase/firestore';
+
+/**
+ * Message from server interface (for SSE)
+ */
+interface MessageFromServer {
+  id: string;
+  text: string;
+  createdAt?: string; // ISO date string from server
+  userName: string;
+  roomId: string;
+}
 
 /**
  * Room entity interface
@@ -17,7 +27,7 @@ export interface Room {
 export interface Message {
   id: string;
   text: string;
-  createdAt: Timestamp;
+  createdAt: Date | null; // Changed from Timestamp to Date for compatibility with SSE
   userName: string;
   roomId: string;
 }
@@ -129,7 +139,7 @@ export const sendMessage = async (roomId: string, text: string, userName: string
 };
 
 /**
- * Subscribe to messages in a room
+ * Subscribe to messages in a room using Server-Sent Events
  * @param roomId The ID of the room to subscribe to
  * @param callback Function to call when messages are updated
  * @returns Unsubscribe function to stop listening for updates
@@ -138,21 +148,39 @@ export const subscribeToRoomMessages = (
   roomId: string,
   callback: (messages: Message[]) => void
 ): Unsubscribe => {
-  // Create a query for messages in this room, ordered by creation time
-  const messagesQuery = query(
-    collection(db, 'messages'),
-    where('roomId', '==', roomId),
-    orderBy('createdAt', 'asc')
-  );
+  // Create an EventSource to connect to the SSE endpoint
+  const eventSource = new EventSource(`/api/messages/${roomId}/stream`);
 
-  // Subscribe to the query and transform the results
-  return onSnapshot(messagesQuery, (snapshot) => {
-    const messages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Message[];
+  // Handle incoming messages
+  eventSource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
 
-    // Call the callback with the updated messages
-    callback(messages);
-  });
+      if (data.messages) {
+        // Transform ISO date strings back to Date objects for compatibility
+        const messages = data.messages.map((msg: MessageFromServer) => ({
+          ...msg,
+          createdAt: msg.createdAt ? new Date(msg.createdAt) : null
+        })) as Message[];
+
+        // Call the callback with the updated messages
+        callback(messages);
+      } else if (data.error) {
+        console.error('Error from SSE:', data.error);
+      }
+    } catch (error) {
+      console.error('Error parsing SSE message:', error);
+    }
+  };
+
+  // Handle errors
+  eventSource.onerror = (error) => {
+    console.error('SSE connection error:', error);
+    // Try to reconnect automatically (the browser will do this by default)
+  };
+
+  // Return an unsubscribe function
+  return () => {
+    eventSource.close();
+  };
 };

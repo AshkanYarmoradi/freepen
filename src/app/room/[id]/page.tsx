@@ -170,7 +170,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                         )}
                         <p>{message.text}</p>
                         <div className="text-xs mt-1 opacity-70">
-                          {message.createdAt?.toDate().toLocaleTimeString() || 'Just now'}
+                          {message.createdAt ? message.createdAt.toLocaleTimeString() : 'Just now'}
                         </div>
                       </div>
                     </div>
