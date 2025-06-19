@@ -18,3 +18,14 @@ global.TextEncoder = class {
     return new Uint8Array(text.split('').map(char => char.charCodeAt(0)));
   }
 };
+
+// Mock fetch API for tests
+global.fetch = jest.fn().mockImplementation(() => 
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+    status: 200,
+    headers: new Map(),
+  })
+);
