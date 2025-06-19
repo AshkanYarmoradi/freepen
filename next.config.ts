@@ -2,6 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  webpack: (config, { isServer }) => {
+    // Handle node: scheme imports for browser
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        process: require.resolve('process/browser'),
+        'node:process': require.resolve('process/browser'),
+      };
+    }
+    return config;
+  },
   headers: async () => {
     return [
       {

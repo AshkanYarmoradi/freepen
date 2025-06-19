@@ -8,7 +8,7 @@ interface UserContextType {
   authenticatedRooms: string[];
   addAuthenticatedRoom: (roomId: string) => void;
   isRoomAuthenticated: (roomId: string) => boolean;
-  refreshUserSession: () => Promise<void>;
+  refreshUserSession: () => Promise<string>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);

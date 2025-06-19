@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { SecurityEventType } from './lib/security-logger';
+import { SecurityEventType, logSecurityEvent as logEvent } from './lib/edge-security-logger';
 
-// Import dynamically to avoid issues with SSR
+// Use edge-security-logger for middleware (Edge Runtime)
 const logSecurityEvent = async (
   type: SecurityEventType,
   request: Request,
   details?: Record<string, unknown>
 ) => {
-  // Dynamic import to avoid SSR issues
-  const { logSecurityEvent: logEvent } = await import('./lib/security-logger');
   return logEvent(type, request, details);
 };
 
