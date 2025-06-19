@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import { Message, sendMessage, subscribeToRoomMessages, joinRoom } from '@/lib/db';
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const { userName, isRoomAuthenticated, addAuthenticatedRoom } = useUserContext();
+  const { userName, isRoomAuthenticated, addAuthenticatedRoom, refreshUserSession } = useUserContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -24,10 +24,17 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
   // Check if user is authenticated for this room
   useEffect(() => {
-    if (id && !isRoomAuthenticated(id)) {
-      setShowPasswordPrompt(true);
-    }
-  }, [id, isRoomAuthenticated]);
+    const checkAuthentication = async () => {
+      // Refresh the user session to get the updated userName
+      await refreshUserSession();
+
+      if (id && !isRoomAuthenticated(id)) {
+        setShowPasswordPrompt(true);
+      }
+    };
+
+    checkAuthentication();
+  }, [id, isRoomAuthenticated, refreshUserSession]);
 
   // Handle room authentication
   const handleAuthenticate = async (e: React.FormEvent) => {
@@ -42,6 +49,10 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       // Use the name input if provided, otherwise use the existing userName
       const nameToUse = nameInput.trim() || userName;
       await joinRoom(id, password, nameToUse);
+
+      // Refresh the user session to get the updated userName
+      await refreshUserSession();
+
       addAuthenticatedRoom(id);
       setShowPasswordPrompt(false);
     } catch (error) {
@@ -79,6 +90,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     setIsSending(true);
 
     try {
+      // Refresh the user session to get the updated userName before sending the message
+      await refreshUserSession();
+
       await sendMessage(id, newMessage.trim(), userName);
       setNewMessage('');
     } catch (error) {

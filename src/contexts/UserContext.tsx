@@ -8,6 +8,7 @@ interface UserContextType {
   authenticatedRooms: string[];
   addAuthenticatedRoom: (roomId: string) => void;
   isRoomAuthenticated: (roomId: string) => boolean;
+  refreshUserSession: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -25,6 +26,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUserName(name);
     if (typeof window !== 'undefined') {
       localStorage.setItem(USER_NAME_KEY, name);
+    }
+  };
+
+  // Function to refresh user session data from the server
+  const refreshUserSession = async () => {
+    try {
+      const response = await fetch('/api/auth/session');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.isLoggedIn && data.userName) {
+          handleSetUserName(data.userName);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user session:', error);
     }
   };
 
@@ -73,7 +89,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setUserName: handleSetUserName, 
       authenticatedRooms, 
       addAuthenticatedRoom, 
-      isRoomAuthenticated 
+      isRoomAuthenticated,
+      refreshUserSession
     }}>
       {children}
     </UserContext.Provider>
