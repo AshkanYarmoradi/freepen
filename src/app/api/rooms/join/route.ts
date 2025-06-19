@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const roomData = roomDoc.data();
 
     // Verify the password
-    const isPasswordValid = await verifyPassword(password, roomData.passwordHash);
+    const isPasswordValid = await verifyPassword(password, roomData!.passwordHash);
 
     if (!isPasswordValid) {
       // Add a delay to prevent timing attacks
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     // Password is valid, return success
     return NextResponse.json({ 
       roomId,
-      name: roomData.name,
+      name: roomData!.name,
       success: true 
     });
   } catch (error: unknown) {

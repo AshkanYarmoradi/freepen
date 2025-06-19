@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     const roomData = roomDoc.data();
 
     // Verify the password
-    const isPasswordValid = await verifyPassword(password, roomData.passwordHash);
+    const isPasswordValid = await verifyPassword(password, roomData!.passwordHash);
 
     if (!isPasswordValid) {
       // Add a delay to prevent timing attacks

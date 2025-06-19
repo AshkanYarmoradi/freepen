@@ -1,4 +1,4 @@
-import { getIronSession, IronSessionOptions } from 'iron-session';
+import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
@@ -12,7 +12,7 @@ export interface SessionData {
 }
 
 // Define the session options
-export const sessionOptions: IronSessionOptions = {
+export const sessionOptions = {
   password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long',
   cookieName: 'pong_session',
   cookieOptions: {
