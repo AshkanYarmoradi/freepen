@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { rateLimit } from '@/lib/rate-limit';
+import { adminDb } from '@/lib/firebase-admin';
 
 // Create a limiter for room joining (15 requests per minute)
 // More strict than room creation to prevent brute force attacks
@@ -23,7 +22,7 @@ const joinRoomSchema = z.object({
 const verifyPassword = async (password: string, storedHash: string): Promise<boolean> => {
   // Extract the salt and hash from the stored value
   const [salt, hash] = storedHash.split(':');
-  
+
   // Hash the provided password with the same salt
   return new Promise((resolve, reject) => {
     crypto.pbkdf2(password, salt, 10000, 64, 'sha512', (err, derivedKey) => {
@@ -42,7 +41,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       // Add a delay to further discourage brute force attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }
@@ -52,44 +51,44 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json();
     const result = joinRoomSchema.safeParse(body);
-    
+
     if (!result.success) {
       return NextResponse.json(
         { error: result.error.errors[0].message },
         { status: 400 }
       );
     }
-    
+
     const { roomId, password, userName } = result.data;
-    
+
     // Get the room document
-    const roomDoc = await getDoc(doc(db, 'rooms', roomId));
-    
-    if (!roomDoc.exists()) {
+    const roomDoc = await adminDb.collection('rooms').doc(roomId).get();
+
+    if (!roomDoc.exists) {
       // Add a delay to prevent timing attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       return NextResponse.json(
         { error: 'Room not found' },
         { status: 404 }
       );
     }
-    
+
     const roomData = roomDoc.data();
-    
+
     // Verify the password
     const isPasswordValid = await verifyPassword(password, roomData.passwordHash);
-    
+
     if (!isPasswordValid) {
       // Add a delay to prevent timing attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       return NextResponse.json(
         { error: 'Incorrect password' },
         { status: 401 }
       );
     }
-    
+
     // Password is valid, return success
     return NextResponse.json({ 
       roomId,

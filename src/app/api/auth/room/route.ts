@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSession, addAuthenticatedRoom, isRoomAuthenticated } from '@/lib/session';
 import { rateLimit } from '@/lib/rate-limit';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import crypto from 'crypto';
 import { logSecurityEvent, SecurityEventType } from '@/lib/security-logger';
+import { adminDb } from '@/lib/firebase-admin';
 
 // Create a limiter for room authentication (15 requests per minute)
 const limiter = rateLimit({
@@ -112,9 +111,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the room document
-    const roomDoc = await getDoc(doc(db, 'rooms', roomId));
+    const roomDoc = await adminDb.collection('rooms').doc(roomId).get();
 
-    if (!roomDoc.exists()) {
+    if (!roomDoc.exists) {
       // Add a delay to prevent timing attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
 

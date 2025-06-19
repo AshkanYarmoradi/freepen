@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { z } from 'zod';
 import { rateLimit } from '@/lib/rate-limit';
 import DOMPurify from 'isomorphic-dompurify';
+import { getSession, isRoomAuthenticated } from '@/lib/session';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Create a limiter for message sending (30 messages per minute)
 const limiter = rateLimit({
@@ -15,7 +16,7 @@ const limiter = rateLimit({
 const sendMessageSchema = z.object({
   roomId: z.string().min(1, 'Room ID is required'),
   text: z.string().min(1, 'Message text is required').max(1000, 'Message is too long'),
-  userName: z.string().min(1, 'User name is required'),
+  userName: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -30,39 +31,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if the user is logged in
+    const session = await getSession();
+    if (!session.isLoggedIn) {
+      return NextResponse.json(
+        { error: 'You must be logged in to send a message' },
+        { status: 401 }
+      );
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const result = sendMessageSchema.safeParse(body);
-    
+
     if (!result.success) {
       return NextResponse.json(
         { error: result.error.errors[0].message },
         { status: 400 }
       );
     }
-    
+
     const { roomId, text, userName } = result.data;
-    
+
     // Verify that the room exists
-    const roomDoc = await getDoc(doc(db, 'rooms', roomId));
-    if (!roomDoc.exists()) {
+    const roomDoc = await adminDb.collection('rooms').doc(roomId).get();
+    if (!roomDoc.exists) {
       return NextResponse.json(
         { error: 'Room not found' },
         { status: 404 }
       );
     }
-    
+
+    // Check if the user is authenticated for this room
+    if (!isRoomAuthenticated(session, roomId)) {
+      return NextResponse.json(
+        { error: 'You must be authenticated for this room to send a message' },
+        { status: 403 }
+      );
+    }
+
     // Sanitize the message text to prevent XSS
     const sanitizedText = DOMPurify.sanitize(text);
-    
+
     // Add the message to the database
-    await addDoc(collection(db, 'messages'), {
+    await adminDb.collection('messages').add({
       text: sanitizedText,
       roomId,
-      userName: DOMPurify.sanitize(userName) || 'Anonymous',
-      createdAt: serverTimestamp(),
+      userName: session.userName || 'Anonymous',
+      createdAt: FieldValue.serverTimestamp(),
     });
-    
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error sending message:', error);
