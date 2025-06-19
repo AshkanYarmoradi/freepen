@@ -17,6 +17,7 @@ const roomAuthSchema = z.object({
   roomId: z.string().min(1, 'Room ID is required'),
   password: z.string().min(1, 'Password is required'),
   csrfToken: z.string().min(1, 'CSRF token is required'),
+  name: z.string().optional(),
 });
 
 /**
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { roomId, password, csrfToken } = result.data;
+    const { roomId, password, csrfToken, name } = result.data;
 
     // Verify CSRF token
     if (session.csrfToken !== csrfToken) {
@@ -178,6 +179,12 @@ export async function POST(request: NextRequest) {
         { error: 'Incorrect password' },
         { status: 401 }
       );
+    }
+
+    // Update the user's name if provided
+    if (name && name.trim() !== '') {
+      session.userName = name.trim();
+      await session.save();
     }
 
     // Add the room to the authenticated rooms list

@@ -18,6 +18,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   // State for password authentication
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [password, setPassword] = useState('');
+  const [nameInput, setNameInput] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -38,7 +39,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     setAuthError(null);
 
     try {
-      await joinRoom(id, password, userName);
+      // Use the name input if provided, otherwise use the existing userName
+      const nameToUse = nameInput.trim() || userName;
+      await joinRoom(id, password, nameToUse);
       addAuthenticatedRoom(id);
       setShowPasswordPrompt(false);
     } catch (error) {
@@ -122,6 +125,15 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
             )}
 
             <form onSubmit={handleAuthenticate}>
+              <div className="mb-4">
+                <Input
+                  label="Your Name"
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Enter your name (optional)"
+                />
+              </div>
               <div className="mb-4">
                 <Input
                   label="Room Password"
