@@ -5,8 +5,8 @@ import { rateLimit } from '@/lib/rate-limit';
 import { adminDb } from '@/lib/firebase-admin';
 import { getSession, createSession, addAuthenticatedRoom } from '@/lib/session';
 
-// Create a limiter for room joining (15 requests per minute)
-// More strict than room creation to prevent brute force attacks
+// Create a limiter for room joining (10 requests per minute)
+// More strict than before (reduced from 15 to 10) to prevent brute force attacks
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500, // Max 500 users per interval
@@ -38,10 +38,18 @@ export async function POST(request: NextRequest) {
   try {
     // Apply rate limiting - stricter for join attempts to prevent brute force
     try {
-      await limiter.check(request, 15); // 15 requests per minute
+      await limiter.check(request, 10); // 10 requests per minute (reduced from 15)
     } catch {
       // Add a delay to further discourage brute force attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Log the rate limit exceeded event
+      const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
+      await logSecurityEvent(
+        SecurityEventType.RATE_LIMIT_EXCEEDED,
+        request,
+        { endpoint: 'rooms/join', limit: 10 }
+      );
 
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
@@ -83,6 +91,18 @@ export async function POST(request: NextRequest) {
     if (!isPasswordValid) {
       // Add a delay to prevent timing attacks
       await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Log the authentication failure
+      const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
+      await logSecurityEvent(
+        SecurityEventType.AUTH_FAILURE,
+        request,
+        { 
+          roomId,
+          reason: 'Incorrect password',
+          userName
+        }
+      );
 
       return NextResponse.json(
         { error: 'Incorrect password' },

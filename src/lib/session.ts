@@ -13,16 +13,24 @@ export interface SessionData {
 
 // Define the session options
 export const sessionOptions = {
-  password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long',
+  password: process.env.SESSION_SECRET || (() => {
+    // In development, generate a random password if SESSION_SECRET is not set
+    if (process.env.NODE_ENV !== 'production') {
+      const crypto = require('crypto');
+      return crypto.randomBytes(32).toString('hex');
+    }
+    // In production, throw an error if SESSION_SECRET is not set
+    throw new Error('SESSION_SECRET environment variable must be set in production');
+  })(),
   cookieName: 'pong_session',
   cookieOptions: {
-    // Set secure to true in production
-    secure: process.env.NODE_ENV === 'production',
+    // Always set secure to true unless explicitly in development
+    secure: process.env.NODE_ENV === 'production' || process.env.NODE_ENV !== 'development',
     httpOnly: true,
     sameSite: 'strict',
     path: '/',
-    // Set an expiration date for the cookie
-    maxAge: 60 * 60 * 24 * 7, // 1 week
+    // Set an expiration date for the cookie (reduced from 1 week to 24 hours for better security)
+    maxAge: 60 * 60 * 24, // 24 hours
   },
 };
 

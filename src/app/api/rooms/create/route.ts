@@ -6,7 +6,8 @@ import { getSession, createSession, addAuthenticatedRoom } from '@/lib/session';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
-// Create a limiter for room creation (10 requests per minute)
+// Create a limiter for room creation (5 requests per minute)
+// Reduced from 10 to 5 for better security
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500, // Max 500 users per interval
@@ -50,8 +51,16 @@ export async function POST(request: NextRequest) {
   try {
     // Apply rate limiting
     try {
-      await limiter.check(request, 10); // 10 requests per minute
+      await limiter.check(request, 5); // 5 requests per minute (reduced from 10)
     } catch {
+      // Log the rate limit exceeded event
+      const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
+      await logSecurityEvent(
+        SecurityEventType.RATE_LIMIT_EXCEEDED,
+        request,
+        { endpoint: 'rooms/create', limit: 5 }
+      );
+
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429 }

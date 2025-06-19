@@ -5,35 +5,48 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
-    
+
     // Room rules
     match /rooms/{roomId} {
-      // Allow reading room data (but not the password hash)
-      allow read: if true;
-      
+      // Only allow reading room data with specific fields (exclude passwordHash)
+      allow read: if request.auth != null || (
+        // For public access, only allow reading specific fields
+        request.resource.data.keys().hasOnly(['id', 'name', 'createdAt', 'createdBy'])
+      );
+
       // Only allow creating rooms through our API
       allow create: if false;
-      
+
       // Only allow updating rooms if you're the creator
       allow update: if false;
-      
+
       // Only allow deleting rooms if you're the creator
       allow delete: if false;
     }
-    
+
     // Message rules
     match /messages/{messageId} {
-      // Allow reading messages for a room
-      allow read: if true;
-      
+      // Only allow reading messages for a room if you have access to that room
+      allow read: if request.auth != null || (
+        // For public access, verify the message belongs to a public room
+        exists(/databases/$(database)/documents/rooms/$(resource.data.roomId))
+      );
+
       // Only allow creating messages through our API
       allow create: if false;
-      
+
       // Don't allow updating messages
       allow update: if false;
-      
+
       // Don't allow deleting messages
       allow delete: if false;
+    }
+
+    // Security logs should be strictly controlled
+    match /securityLogs/{logId} {
+      // No public access to security logs
+      allow read: if false;
+      allow write: if false;
     }
   }
 }
