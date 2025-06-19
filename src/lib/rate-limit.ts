@@ -69,5 +69,5 @@ function getToken(request: NextRequest): string {
   }
 
   // Fall back to IP from request object
-  return request.ip || '127.0.0.1';
+  return '127.0.0.1';
 }
