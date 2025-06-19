@@ -56,7 +56,11 @@ freepen is a secure chat application built with Next.js and Firebase. It allows 
    - Create a new project
    - Enable Authentication (Email/Password)
    - Create a Firestore Database in production mode
-   - Generate a new private key for Firebase Admin SDK
+   - Generate a new private key for Firebase Admin SDK:
+     - Go to Project settings > Service accounts
+     - Click "Generate new private key"
+     - Save the JSON file securely
+     - You'll need the `project_id`, `client_email`, and `private_key` values for your .env.local file
 
 4. Update the `.env.local` file with your Firebase configuration:
    ```
@@ -71,6 +75,11 @@ freepen is a secure chat application built with Next.js and Firebase. It allows 
 
    # Session Configuration
    SESSION_SECRET=your-secure-random-string
+
+   # Firebase Admin SDK configuration
+   FIREBASE_PROJECT_ID=your-project-id
+   FIREBASE_CLIENT_EMAIL=your-service-account-email@your-project-id.iam.gserviceaccount.com
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour private key content here...\n-----END PRIVATE KEY-----\n"
 
    # Rate Limiting (optional, defaults provided)
    RATE_LIMIT_ROOM_CREATE=5
