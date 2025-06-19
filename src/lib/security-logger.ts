@@ -1,5 +1,5 @@
 import { adminDb } from './firebase-admin';
-import { serverTimestamp, FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 // Security event types
 export enum SecurityEventType {
@@ -52,7 +52,7 @@ export async function logSecurityEvent(
       userAgent,
       path,
       details,
-      timestamp: serverTimestamp(),
+      timestamp: FieldValue.serverTimestamp(),
     };
 
     // Log to Firestore
