@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     await adminDb.collection('messages').add({
       text: sanitizedText,
       roomId,
-      userName: session.userName || 'Anonymous',
+      userName: userName || session.userName || 'Anonymous',
       createdAt: FieldValue.serverTimestamp(),
     });
 
