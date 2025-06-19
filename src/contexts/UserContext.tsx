@@ -12,16 +12,26 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Key for storing authenticated rooms in localStorage
+// Keys for storing data in localStorage
 const AUTHENTICATED_ROOMS_KEY = 'pong_authenticated_rooms';
+const USER_NAME_KEY = 'pong_user_name';
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState<string>('Anonymous');
   const [authenticatedRooms, setAuthenticatedRooms] = useState<string[]>([]);
 
-  // Load authenticated rooms from localStorage on initial render
+  // Custom setUserName function that also saves to localStorage
+  const handleSetUserName = (name: string) => {
+    setUserName(name);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(USER_NAME_KEY, name);
+    }
+  };
+
+  // Load authenticated rooms and userName from localStorage on initial render
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Load authenticated rooms
       const storedRooms = localStorage.getItem(AUTHENTICATED_ROOMS_KEY);
       if (storedRooms) {
         try {
@@ -29,6 +39,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error('Error parsing authenticated rooms from localStorage:', error);
         }
+      }
+
+      // Load userName
+      const storedUserName = localStorage.getItem(USER_NAME_KEY);
+      if (storedUserName) {
+        setUserName(storedUserName);
       }
     }
   }, []);
@@ -54,7 +70,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   return (
     <UserContext.Provider value={{ 
       userName, 
-      setUserName, 
+      setUserName: handleSetUserName, 
       authenticatedRooms, 
       addAuthenticatedRoom, 
       isRoomAuthenticated 
