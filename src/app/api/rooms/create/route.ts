@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { rateLimit } from '@/lib/rate-limit';
-import { getSession } from '@/lib/session';
+import { getSession, createSession, addAuthenticatedRoom } from '@/lib/session';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -46,14 +46,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if the user is logged in
+    // Get the current session or create a new one
     const session = await getSession();
-    if (!session.isLoggedIn) {
-      return NextResponse.json(
-        { error: 'You must be logged in to create a room' },
-        { status: 401 }
-      );
-    }
 
     // Parse and validate request body
     const body = await request.json();
@@ -68,6 +62,12 @@ export async function POST(request: NextRequest) {
 
     const { name, password, userName } = result.data;
 
+    // If user is not logged in and provided a username, create a session for them
+    if (!session.isLoggedIn && userName) {
+      // Create a new session with the provided username
+      await createSession(userName);
+    }
+
     // Hash the password securely
     const passwordHash = await hashPassword(password);
 
@@ -76,8 +76,11 @@ export async function POST(request: NextRequest) {
       name,
       passwordHash,
       createdAt: FieldValue.serverTimestamp(),
-      createdBy: session.userName,
+      createdBy: session.isLoggedIn ? session.userName : (userName || 'Anonymous'),
     });
+
+    // Add the room to the user's authenticated rooms list
+    await addAuthenticatedRoom(roomRef.id);
 
     return NextResponse.json({ roomId: roomRef.id }, { status: 201 });
   } catch (error: any) {

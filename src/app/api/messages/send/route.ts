@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { rateLimit } from '@/lib/rate-limit';
 import DOMPurify from 'isomorphic-dompurify';
-import { getSession, isRoomAuthenticated } from '@/lib/session';
+import { getSession, isRoomAuthenticated, createSession } from '@/lib/session';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -31,14 +31,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if the user is logged in
+    // Get the current session
     const session = await getSession();
-    if (!session.isLoggedIn) {
-      return NextResponse.json(
-        { error: 'You must be logged in to send a message' },
-        { status: 401 }
-      );
-    }
 
     // Parse and validate request body
     const body = await request.json();
@@ -52,6 +46,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { roomId, text, userName } = result.data;
+
+    // If user is not logged in and provided a username, create a session for them
+    if (!session.isLoggedIn && userName) {
+      await createSession(userName);
+    }
 
     // Verify that the room exists
     const roomDoc = await adminDb.collection('rooms').doc(roomId).get();

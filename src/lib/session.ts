@@ -1,6 +1,7 @@
 import { getIronSession, IronSessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 // Define the session data structure
 export interface SessionData {
@@ -28,11 +29,12 @@ export const sessionOptions: IronSessionOptions = {
 
 // Get the session from the request
 export async function getSession(req?: NextRequest) {
+  const cookieStore = await cookies();
   const session = await getIronSession<SessionData>(
-    cookies(),
+    cookieStore,
     sessionOptions
   );
-  
+
   // Initialize the session if it doesn't exist
   if (!session.isLoggedIn) {
     session.isLoggedIn = false;
@@ -41,42 +43,42 @@ export async function getSession(req?: NextRequest) {
     session.authenticatedRooms = [];
     session.csrfToken = '';
   }
-  
+
   return session;
 }
 
 // Create a new session
 export async function createSession(userName: string) {
   const session = await getSession();
-  
+
   // Generate a random user ID
   const userId = crypto.randomUUID();
-  
+
   // Generate a CSRF token
   const csrfToken = crypto.randomUUID();
-  
+
   // Update the session
   session.isLoggedIn = true;
   session.userId = userId;
   session.userName = userName;
   session.authenticatedRooms = [];
   session.csrfToken = csrfToken;
-  
+
   // Save the session
   await session.save();
-  
+
   return session;
 }
 
 // Add an authenticated room to the session
 export async function addAuthenticatedRoom(roomId: string) {
   const session = await getSession();
-  
+
   if (!session.authenticatedRooms.includes(roomId)) {
     session.authenticatedRooms.push(roomId);
     await session.save();
   }
-  
+
   return session;
 }
 

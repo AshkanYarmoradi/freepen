@@ -3,6 +3,7 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import { rateLimit } from '@/lib/rate-limit';
 import { adminDb } from '@/lib/firebase-admin';
+import { getSession, createSession, addAuthenticatedRoom } from '@/lib/session';
 
 // Create a limiter for room joining (15 requests per minute)
 // More strict than room creation to prevent brute force attacks
@@ -88,6 +89,17 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Get the current session or create a new one
+    const session = await getSession();
+
+    // If user is not logged in, create a session for them
+    if (!session.isLoggedIn) {
+      await createSession(userName);
+    }
+
+    // Add the room to the user's authenticated rooms list
+    await addAuthenticatedRoom(roomId);
 
     // Password is valid, return success
     return NextResponse.json({ 

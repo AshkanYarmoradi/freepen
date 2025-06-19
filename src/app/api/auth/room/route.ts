@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
     // Get the session
     const session = await getSession();
 
-    // Check if the user is logged in
+    // If the user is not logged in, we can't authenticate them for a room
+    // because we don't have a session to store the authentication in
     if (!session.isLoggedIn) {
       return NextResponse.json(
         { error: 'You must be logged in to authenticate for a room' },
