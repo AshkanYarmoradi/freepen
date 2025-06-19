@@ -22,12 +22,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [authenticatedRooms, setAuthenticatedRooms] = useState<string[]>([]);
 
   // Custom setUserName function that also saves to localStorage
-  const handleSetUserName = (name: string) => {
+  const handleSetUserName = useCallback((name: string) => {
     setUserName(name);
     if (typeof window !== 'undefined') {
       localStorage.setItem(USER_NAME_KEY, name);
     }
-  };
+  }, []);
 
   // Function to refresh user session data from the server
   const refreshUserSession = useCallback(async () => {
