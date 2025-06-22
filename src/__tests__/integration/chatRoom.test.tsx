@@ -31,6 +31,11 @@ jest.mock('@/lib/db', () => ({
   }),
 }));
 
+// Mock the encryption module
+jest.mock('@/lib/encryption', () => ({
+  getRoomKey: jest.fn().mockReturnValue({}), // Return a mock key
+}));
+
 // Mock the useRef implementation
 const mockScrollIntoView = jest.fn();
 jest.mock('react', () => {

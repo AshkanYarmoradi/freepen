@@ -37,10 +37,14 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       // Update the sessionUserName state variable with the latest userName
       setSessionUserName(updatedUserName);
 
-      if (id && !isRoomAuthenticated(id)) {
+      // Import getRoomKey dynamically to avoid circular dependencies
+      const { getRoomKey } = await import('@/lib/encryption');
+
+      // Check if user is authenticated and has encryption key
+      if (id && (!isRoomAuthenticated(id) || !getRoomKey(id))) {
         setShowPasswordPrompt(true);
       } else {
-        // User is already authenticated for this room, ensure we have the latest userName
+        // User is already authenticated for this room and has encryption key
         setShowPasswordPrompt(false);
       }
     };
