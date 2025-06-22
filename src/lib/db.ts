@@ -1,4 +1,5 @@
 import { Timestamp, Unsubscribe } from 'firebase/firestore';
+import { encryptMessage, decryptMessage, getRoomKey, storeRoomKey, deriveKey } from './encryption';
 
 /**
  * Message from server interface (for SSE)
@@ -6,6 +7,8 @@ import { Timestamp, Unsubscribe } from 'firebase/firestore';
 interface MessageFromServer {
   id: string;
   text: string;
+  iv?: string; // Initialization vector for encrypted messages
+  encrypted?: boolean; // Flag indicating if the message is encrypted
   createdAt?: string; // ISO date string from server
   userName: string;
   roomId: string;
@@ -27,6 +30,8 @@ export interface Room {
 export interface Message {
   id: string;
   text: string;
+  iv?: string; // Initialization vector for encrypted messages
+  encrypted?: boolean; // Flag indicating if the message is encrypted
   createdAt: Date | null; // Changed from Timestamp to Date for compatibility with SSE
   userName: string;
   roomId: string;
@@ -60,7 +65,19 @@ export const createRoom = async (name: string, password: string, userName?: stri
     }
 
     const data = await response.json();
-    return data.roomId;
+    const roomId = data.roomId;
+
+    // Derive encryption key from password and room ID
+    // Using roomId as salt ensures different keys for different rooms with the same password
+    try {
+      const key = await deriveKey(password, roomId);
+      storeRoomKey(roomId, key);
+    } catch (error) {
+      console.error('Error deriving encryption key:', error);
+      // Continue even if key derivation fails - messages will be sent/displayed unencrypted
+    }
+
+    return roomId;
   } catch (error) {
     console.error('Error creating room:', error);
     throw error;
@@ -95,6 +112,17 @@ export const joinRoom = async (roomId: string, password: string, userName: strin
     }
 
     const data = await response.json();
+
+    // Derive encryption key from password and room ID
+    // Using roomId as salt ensures different keys for different rooms with the same password
+    try {
+      const key = await deriveKey(password, roomId);
+      storeRoomKey(roomId, key);
+    } catch (error) {
+      console.error('Error deriving encryption key:', error);
+      // Continue even if key derivation fails - messages will be sent/displayed unencrypted
+    }
+
     return {
       roomId: data.roomId,
       userName: data.userName || userName
@@ -119,16 +147,44 @@ export const joinRoom = async (roomId: string, password: string, userName: strin
  */
 export const sendMessage = async (roomId: string, text: string, userName?: string): Promise<void> => {
   try {
+    // Get the encryption key for this room
+    const key = getRoomKey(roomId);
+
+    let messageData: {
+      roomId: string;
+      text: string;
+      userName?: string;
+      encrypted?: boolean;
+      iv?: string;
+    } = {
+      roomId,
+      text,
+      userName,
+    };
+
+    // If we have an encryption key, encrypt the message
+    if (key) {
+      try {
+        const { encryptedText, iv } = await encryptMessage(text, key);
+        messageData = {
+          roomId,
+          text: encryptedText,
+          userName,
+          encrypted: true,
+          iv
+        };
+      } catch (encryptError) {
+        console.error('Error encrypting message:', encryptError);
+        // Fall back to unencrypted message if encryption fails
+      }
+    }
+
     const response = await fetch('/api/messages/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        roomId,
-        text,
-        userName,
-      }),
+      body: JSON.stringify(messageData),
     });
 
     if (!response.ok) {
@@ -155,16 +211,43 @@ export const subscribeToRoomMessages = (
   const eventSource = new EventSource(`/api/messages/${roomId}/stream`);
 
   // Handle incoming messages
-  eventSource.onmessage = (event) => {
+  eventSource.onmessage = async (event) => {
     try {
       const data = JSON.parse(event.data);
 
       if (data.messages) {
-        // Transform ISO date strings back to Date objects for compatibility
-        const messages = data.messages.map((msg: MessageFromServer) => ({
-          ...msg,
-          createdAt: msg.createdAt ? new Date(msg.createdAt) : null
-        })) as Message[];
+        // Get the encryption key for this room
+        const key = getRoomKey(roomId);
+
+        // Transform messages and decrypt if necessary
+        const messages = await Promise.all(data.messages.map(async (msg: MessageFromServer) => {
+          // Create base message with date conversion
+          const baseMessage = {
+            ...msg,
+            createdAt: msg.createdAt ? new Date(msg.createdAt) : null
+          } as Message;
+
+          // If message is encrypted and we have the key, try to decrypt it
+          if (msg.encrypted && msg.iv && key) {
+            try {
+              const decryptedText = await decryptMessage(msg.text, msg.iv, key);
+              return {
+                ...baseMessage,
+                text: decryptedText
+              };
+            } catch (decryptError) {
+              console.error('Error decrypting message:', decryptError);
+              // Return message with indication that it couldn't be decrypted
+              return {
+                ...baseMessage,
+                text: '[Encrypted message - cannot decrypt]'
+              };
+            }
+          }
+
+          // Return the message as is if not encrypted or decryption not possible
+          return baseMessage;
+        }));
 
         // Call the callback with the updated messages
         callback(messages);
