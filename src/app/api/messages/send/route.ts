@@ -16,8 +16,10 @@ const limiter = rateLimit({
 // Input validation schema
 const sendMessageSchema = z.object({
   roomId: z.string().min(1, 'Room ID is required'),
-  text: z.string().min(1, 'Message text is required').max(1000, 'Message is too long'),
+  text: z.string().min(1, 'Message text is required').max(5000, 'Message is too long'), // Increased max length for encrypted messages
   userName: z.string().optional(),
+  encrypted: z.boolean().optional(), // Flag indicating if the message is encrypted
+  iv: z.string().optional(), // Initialization vector for encrypted messages
 });
 
 export async function POST(request: NextRequest) {
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { roomId, text, userName } = result.data;
+    const { roomId, text, userName, encrypted, iv } = result.data;
 
     // If user is not logged in and provided a username, create a session for them
     if (!session.isLoggedIn && userName) {
@@ -91,39 +93,59 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for potential XSS attempts
-    const containsSuspiciousContent = /<script|javascript:|on\w+\s*=|data:text\/html/i.test(text);
-
-    // Sanitize the message text to prevent XSS
-    const sanitizedText = DOMPurify.sanitize(text, {
-      ALLOWED_TAGS: [], // No HTML tags allowed
-      ALLOWED_ATTR: [], // No attributes allowed
-      FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
-    });
-
-    // Log potential XSS attempts
-    if (containsSuspiciousContent || sanitizedText !== text) {
-      const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
-      await logSecurityEvent(
-        SecurityEventType.XSS_ATTEMPT,
-        request,
-        { 
-          roomId,
-          userId: session.userId,
-          userName: session.userName,
-          originalText: text.substring(0, 100) // Log only first 100 chars for privacy
-        }
-      );
-    }
-
-    // Add the message to the database
-    await adminDb.collection('messages').add({
-      text: sanitizedText,
+    // Define the message data structure
+    const messageData: {
+      roomId: string;
+      userName: string;
+      createdAt: FieldValue;
+      text?: string;
+      encrypted?: boolean;
+      iv?: string;
+    } = {
       roomId,
       userName: session.userName || userName || 'Anonymous',
       createdAt: FieldValue.serverTimestamp(),
-    });
+    };
+
+    // If the message is encrypted, store it as-is with the IV
+    if (encrypted && iv) {
+      messageData.text = text; // Store encrypted text as-is
+      messageData.encrypted = true;
+      messageData.iv = iv;
+    } else {
+      // For unencrypted messages, perform normal sanitization
+
+      // Check for potential XSS attempts
+      const containsSuspiciousContent = /<script|javascript:|on\w+\s*=|data:text\/html/i.test(text);
+
+      // Sanitize the message text to prevent XSS
+      const sanitizedText = DOMPurify.sanitize(text, {
+        ALLOWED_TAGS: [], // No HTML tags allowed
+        ALLOWED_ATTR: [], // No attributes allowed
+        FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
+        FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
+      });
+
+      // Log potential XSS attempts
+      if (containsSuspiciousContent || sanitizedText !== text) {
+        const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
+        await logSecurityEvent(
+          SecurityEventType.XSS_ATTEMPT,
+          request,
+          { 
+            roomId,
+            userId: session.userId,
+            userName: session.userName,
+            originalText: text.substring(0, 100) // Log only first 100 chars for privacy
+          }
+        );
+      }
+
+      messageData.text = sanitizedText;
+    }
+
+    // Add the message to the database
+    await adminDb.collection('messages').add(messageData);
 
     return NextResponse.json({ success: true });
   } catch (error: Error | unknown) {

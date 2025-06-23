@@ -220,31 +220,38 @@ The freepen application implements a multi-layered security approach:
 
 ## Recent Security Improvements
 
-1. **Session Management**:
+1. **End-to-End Encryption**:
+   - Implemented client-side message encryption using Web Crypto API
+   - AES-GCM encryption with 256-bit keys
+   - Keys derived from room passwords using PBKDF2
+   - Encrypted messages bypass server-side sanitization
+   - Messages decrypted only on authorized clients
+
+2. **Session Management**:
    - Removed hardcoded session secret
    - Reduced session duration to 24 hours
    - Enforced secure cookies
 
-2. **Content Security Policy**:
+3. **Content Security Policy**:
    - Stricter CSP in production
    - Added frame-ancestors, base-uri, and form-action directives
 
-3. **CORS Configuration**:
+4. **CORS Configuration**:
    - Restricted CORS in development
 
-4. **Middleware Enhancements**:
+5. **Middleware Enhancements**:
    - Added comprehensive security headers
    - Enhanced CSRF protection with detailed logging
 
-5. **Rate Limiting**:
+6. **Rate Limiting**:
    - Reduced rate limits for all operations
    - Added security logging for rate limit events
 
-6. **Input Validation**:
+7. **Input Validation**:
    - Enhanced XSS protection
    - Stricter DOMPurify configuration
 
-7. **Database Security**:
+8. **Database Security**:
    - Improved Firestore security rules
    - Added explicit rules for security logs
 
@@ -271,7 +278,6 @@ The freepen application implements a multi-layered security approach:
    - Third-party security assessment
 
 5. **Advanced Security Features**:
-   - End-to-end encryption for messages
    - Perfect forward secrecy
    - Secure file sharing capabilities
 
