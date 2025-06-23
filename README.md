@@ -386,7 +386,7 @@ The application is tested and supported on the following browsers:
 
 ### Short-term Goals (Next 3 Months)
 
-- [ ] Implement end-to-end encryption for messages
+- [x] Implement end-to-end encryption for messages ✓
 - [ ] Add file sharing capabilities
 - [ ] Enhance mobile experience with PWA features
 - [ ] Implement user profiles with avatars
@@ -419,7 +419,7 @@ A: Yes, freepen is open-source and free to use under the MIT license.
 A: Yes, you can deploy freepen to your own infrastructure. Follow the deployment instructions in this README.
 
 **Q: Is my data encrypted?**  
-A: All data is transmitted over HTTPS. End-to-end encryption for messages is on our roadmap.
+A: Yes! All data is transmitted over HTTPS, and we've implemented end-to-end encryption for messages using the Web Crypto API with AES-GCM 256-bit encryption.
 
 ### Technical Questions
 
