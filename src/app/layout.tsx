@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import AnimatePresenceWrapper from "@/components/ui/AnimatePresenceWrapper";
+import { Navigation } from "@/components/Navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,9 +59,14 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <UserProvider>
-          <AnimatePresenceWrapper mode="wait">
-            {children}
-          </AnimatePresenceWrapper>
+          <div className="flex flex-col min-h-screen">
+            <Navigation />
+            <main className="flex-1">
+              <AnimatePresenceWrapper mode="wait">
+                {children}
+              </AnimatePresenceWrapper>
+            </main>
+          </div>
         </UserProvider>
       </body>
     </html>

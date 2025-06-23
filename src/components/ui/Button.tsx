@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 
   'onDrag' | 'onDragEnd' | 'onDragEnter' | 'onDragExit' | 'onDragLeave' | 'onDragOver' | 'onDragStart' |
   'onAnimationStart' | 'onAnimationEnd' | 'onAnimationIteration'> {
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   // Add Framer Motion specific props if needed
 }
@@ -16,16 +17,24 @@ export default function Button({
   children,
   className = '',
   variant = 'primary',
+  size = 'md',
   isLoading = false,
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'rounded-md px-4 py-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 relative overflow-hidden';
+  const baseStyles = 'rounded-md font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 relative overflow-hidden';
 
   const variantStyles = {
     primary: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500 shadow-md',
     secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500 shadow-sm',
     danger: 'bg-gradient-to-r from-red-600 to-pink-600 text-white hover:from-red-700 hover:to-pink-700 focus:ring-red-500 shadow-md',
+    outline: 'bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-400',
+  };
+
+  const sizeStyles = {
+    sm: 'px-3 py-1 text-sm',
+    md: 'px-4 py-2',
+    lg: 'px-6 py-3 text-lg',
   };
 
   const loadingStyles = isLoading ? 'opacity-70 cursor-not-allowed' : '';
@@ -56,7 +65,7 @@ export default function Button({
 
   return (
     <motion.button
-      className={`${baseStyles} ${variantStyles[variant]} ${loadingStyles} ${disabledStyles} ${className}`}
+      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${loadingStyles} ${disabledStyles} ${className}`}
       disabled={isLoading || disabled}
       variants={buttonVariants}
       initial="initial"
