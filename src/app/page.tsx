@@ -193,7 +193,7 @@ export default function Home() {
             <>
               {[...Array(5)].map((_, i) => (
                 <motion.div
-                  key={i}
+                  key={`bg-element-${i}`}
                   className="absolute rounded-full bg-gradient-to-r from-blue-400/10 to-indigo-400/10"
                   initial={{ 
                     x: `${Math.random() * 100}%`, 

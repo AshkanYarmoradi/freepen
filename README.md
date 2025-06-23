@@ -14,6 +14,9 @@ freepen is a secure chat application built with Next.js and Firebase. It allows 
 - **Rate Limiting**: Protection against abuse with configurable rate limits
 - **Security Logging**: Comprehensive logging of security events for monitoring
 - **Responsive Design**: Fully responsive UI that works on desktop, tablet, and mobile devices
+- **Progressive Web App (PWA)**: Install as a native app on mobile and desktop devices
+- **Offline Support**: Basic functionality available even without internet connection
+- **Mobile Optimized**: Touch-friendly UI with smooth animations and transitions
 - **Accessibility**: Designed with accessibility in mind for all users
 
 ## Technologies Used
@@ -387,8 +390,8 @@ The application is tested and supported on the following browsers:
 ### Short-term Goals (Next 3 Months)
 
 - [x] Implement end-to-end encryption for messages ✓
+- [x] Enhance mobile experience with PWA features ✓
 - [ ] Add file sharing capabilities
-- [ ] Enhance mobile experience with PWA features
 - [ ] Implement user profiles with avatars
 - [ ] Add typing indicators and read receipts
 
@@ -407,6 +410,41 @@ The application is tested and supported on the following browsers:
 - [ ] Add support for plugins and extensions
 - [ ] Create an API for third-party integrations
 - [ ] Implement advanced analytics and insights
+
+## Progressive Web App (PWA) Features
+
+freepen is designed as a Progressive Web App, providing a native app-like experience on both mobile and desktop devices.
+
+### Installation
+
+Users can install freepen as an app on their devices:
+
+- **iOS**: Open in Safari, tap the Share button, then "Add to Home Screen"
+- **Android**: Open in Chrome, tap the menu button, then "Add to Home Screen" or "Install App"
+- **Desktop**: Open in Chrome, Edge, or other supported browsers, and click the install icon in the address bar
+
+### Offline Support
+
+freepen provides basic functionality even when offline:
+
+- **Cached Content**: Previously loaded chat rooms and messages remain accessible
+- **Graceful Degradation**: Clear offline indicators and fallback UI
+- **Auto-Reconnect**: Automatically reconnects and syncs when connection is restored
+
+### Mobile Optimizations
+
+The mobile experience is enhanced with:
+
+- **Touch-Friendly UI**: Larger touch targets and intuitive gestures
+- **Responsive Animations**: Smooth transitions and feedback animations
+- **Adaptive Layout**: UI automatically adjusts to different screen sizes
+- **Performance Optimizations**: Reduced bundle size and optimized rendering for mobile devices
+
+### PWA Technical Details
+
+- **Service Worker**: Manages caching and offline functionality
+- **Web App Manifest**: Defines app appearance and behavior when installed
+- **Lighthouse Score**: Optimized for high performance, accessibility, and PWA scores
 
 ## Frequently Asked Questions
 

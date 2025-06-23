@@ -205,7 +205,7 @@ export const sendMessage = async (roomId: string, text: string, userName?: strin
  */
 export const subscribeToRoomMessages = (
   roomId: string,
-  callback: (messages: Message[]) => void
+  callback: (_messages: Message[]) => void
 ): Unsubscribe => {
   // Create an EventSource to connect to the SSE endpoint
   const eventSource = new EventSource(`/api/messages/${roomId}/stream`);

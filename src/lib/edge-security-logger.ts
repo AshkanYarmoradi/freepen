@@ -1,4 +1,5 @@
 // Security event types - duplicated from security-logger.ts to avoid importing in Edge Runtime
+// These enum values are exported for use in other files
 export enum SecurityEventType {
   AUTH_SUCCESS = 'auth_success',
   AUTH_FAILURE = 'auth_failure',

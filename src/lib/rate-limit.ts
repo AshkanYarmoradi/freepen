@@ -16,7 +16,7 @@ interface RateLimiter {
    * @param limit Maximum number of requests allowed in the interval
    * @returns Promise that resolves to true if within limit, rejects if exceeded
    */
-  check: (request: NextRequest, limit: number) => Promise<boolean>;
+  check: (_request: NextRequest, _limit: number) => Promise<boolean>;
 }
 
 /**
