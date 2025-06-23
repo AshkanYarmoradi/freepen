@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
+import AnimatePresenceWrapper from "@/components/ui/AnimatePresenceWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <UserProvider>
-          {children}
+          <AnimatePresenceWrapper mode="wait">
+            {children}
+          </AnimatePresenceWrapper>
         </UserProvider>
       </body>
     </html>
