@@ -4,10 +4,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 
 interface UserContextType {
   userName: string;
-  setUserName: (name: string) => void;
+  setUserName: (_name: string) => void;
   authenticatedRooms: string[];
-  addAuthenticatedRoom: (roomId: string) => void;
-  isRoomAuthenticated: (roomId: string) => boolean;
+  addAuthenticatedRoom: (_roomId: string) => void;
+  isRoomAuthenticated: (_roomId: string) => boolean;
   refreshUserSession: () => Promise<string>;
 }
 

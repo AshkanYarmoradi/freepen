@@ -1,4 +1,12 @@
 import type { NextConfig } from "next";
+import withPWA from "next-pwa";
+
+const pwaConfig = {
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
+};
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -73,4 +81,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Use type assertion to resolve type incompatibility between Next.js and next-pwa types
+export default withPWA(pwaConfig)(nextConfig as any);
