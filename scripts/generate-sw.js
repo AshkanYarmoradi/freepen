@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 // Paths
 const srcPath = path.join(__dirname, '..', 'src', 'app', 'service-worker.ts');
@@ -18,7 +18,24 @@ if (!fs.existsSync(publicDir)) {
 try {
   // Use TypeScript compiler to compile the service worker
   console.log('Compiling service worker...');
-  execSync(`npx tsc ${srcPath} --outDir ${publicDir} --target ES2020 --module ESNext --moduleResolution node --skipLibCheck --lib es2020,webworker`);
+  const result = spawnSync('npx', [
+    'tsc',
+    srcPath,
+    '--outDir', publicDir,
+    '--target', 'ES2020',
+    '--module', 'ESNext',
+    '--moduleResolution', 'node',
+    '--skipLibCheck',
+    '--lib', 'es2020,webworker'
+  ], { encoding: 'utf8', stdio: 'inherit' });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (result.status !== 0) {
+    throw new Error(`TypeScript compilation failed with exit code ${result.status}`);
+  }
 
   // Read the compiled file
   const compiledPath = path.join(publicDir, 'service-worker.js');
