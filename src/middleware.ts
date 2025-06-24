@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
       if (!origin && !referer) {
         // Log the security event
         await logSecurityEvent(
-          SecurityEventType.CSRF_VIOLATION,
+          SecurityEventType._CSRF_VIOLATION,
           request as unknown as Request,
           { message: 'No origin or referer', path }
         );
@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
       if (!originMatches && !refererMatches) {
         // Log the security event
         await logSecurityEvent(
-          SecurityEventType.CSRF_VIOLATION,
+          SecurityEventType._CSRF_VIOLATION,
           request as unknown as Request,
           { 
             message: 'Invalid origin or referer', 

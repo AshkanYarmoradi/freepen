@@ -18,23 +18,23 @@ if (!fs.existsSync(publicDir)) {
 try {
   // Use TypeScript compiler to compile the service worker
   console.log('Compiling service worker...');
-  execSync(`npx tsc ${srcPath} --outDir ${publicDir} --target ES2020 --module ESNext --moduleResolution node --skipLibCheck`);
-  
+  execSync(`npx tsc ${srcPath} --outDir ${publicDir} --target ES2020 --module ESNext --moduleResolution node --skipLibCheck --lib es2020,webworker`);
+
   // Read the compiled file
   const compiledPath = path.join(publicDir, 'service-worker.js');
   let serviceWorkerCode = fs.readFileSync(compiledPath, 'utf8');
-  
+
   // Add a timestamp comment for cache busting
   serviceWorkerCode = `// Generated on: ${new Date().toISOString()}\n${serviceWorkerCode}`;
-  
+
   // Write the final service worker file
   fs.writeFileSync(destPath, serviceWorkerCode);
-  
+
   // Clean up the temporary compiled file if it's different from the destination
   if (compiledPath !== destPath && fs.existsSync(compiledPath)) {
     fs.unlinkSync(compiledPath);
   }
-  
+
   console.log('Service worker generated successfully at:', destPath);
 } catch (error) {
   console.error('Error generating service worker:', error);

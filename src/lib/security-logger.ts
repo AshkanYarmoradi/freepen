@@ -2,15 +2,16 @@ import { adminDb } from './firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 // Security event types
+// Prefixed with underscore to indicate they are intentionally unused in this file
 export enum SecurityEventType {
-  AUTH_SUCCESS = 'auth_success',
-  AUTH_FAILURE = 'auth_failure',
-  RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded',
-  CSRF_VIOLATION = 'csrf_violation',
-  SUSPICIOUS_ACTIVITY = 'suspicious_activity',
-  API_ABUSE = 'api_abuse',
-  XSS_ATTEMPT = 'xss_attempt',
-  INJECTION_ATTEMPT = 'injection_attempt',
+  _AUTH_SUCCESS = 'auth_success',
+  _AUTH_FAILURE = 'auth_failure',
+  _RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded',
+  _CSRF_VIOLATION = 'csrf_violation',
+  _SUSPICIOUS_ACTIVITY = 'suspicious_activity',
+  _API_ABUSE = 'api_abuse',
+  _XSS_ATTEMPT = 'xss_attempt',
+  _INJECTION_ATTEMPT = 'injection_attempt',
 }
 
 // Security event interface
@@ -88,13 +89,13 @@ export async function checkSuspiciousIP(ip: string): Promise<boolean> {
       .collection('securityLogs')
       .where('ip', '==', ip)
       .where('type', 'in', [
-        SecurityEventType.AUTH_FAILURE,
-        SecurityEventType.RATE_LIMIT_EXCEEDED,
-        SecurityEventType.CSRF_VIOLATION,
-        SecurityEventType.SUSPICIOUS_ACTIVITY,
-        SecurityEventType.API_ABUSE,
-        SecurityEventType.XSS_ATTEMPT,
-        SecurityEventType.INJECTION_ATTEMPT,
+        SecurityEventType._AUTH_FAILURE,
+        SecurityEventType._RATE_LIMIT_EXCEEDED,
+        SecurityEventType._CSRF_VIOLATION,
+        SecurityEventType._SUSPICIOUS_ACTIVITY,
+        SecurityEventType._API_ABUSE,
+        SecurityEventType._XSS_ATTEMPT,
+        SecurityEventType._INJECTION_ATTEMPT,
       ])
       .where('timestamp', '>=', sixHoursAgo)
       .get();

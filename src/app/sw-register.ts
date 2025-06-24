@@ -38,6 +38,6 @@ export function registerServiceWorker() {
 // Add a type declaration for the workbox property on the window object
 declare global {
   interface Window {
-    workbox: any;
+    workbox: unknown;
   }
 }
