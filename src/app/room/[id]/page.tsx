@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { useUserContext } from '@/contexts/UserContext';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Avatar from '@/components/ui/Avatar';
 import { Message, sendMessage, subscribeToRoomMessages, joinRoom } from '@/lib/db';
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
-  const { userName, isRoomAuthenticated, addAuthenticatedRoom, refreshUserSession, setUserName } = useUserContext();
+  const { userName, isRoomAuthenticated, addAuthenticatedRoom, refreshUserSession, setUserName, getUserAvatar } = useUserContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -140,7 +141,12 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">Chat Room</h1>
           </div>
-          <div>
+          <div className="flex items-center">
+            <Avatar 
+              svgCode={getUserAvatar(id + '-' + sessionUserName)} 
+              size={24} 
+              className="mr-2"
+            />
             <span className="text-gray-700">
               {sessionUserName || 'Anonymous'}
             </span>
@@ -210,6 +216,15 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                       key={message.id}
                       className={`flex ${message.userName === sessionUserName ? 'justify-end' : 'justify-start'}`}
                     >
+                      {message.userName !== sessionUserName && (
+                        <div className="flex-shrink-0 mr-2">
+                          <Avatar 
+                            svgCode={getUserAvatar(id + '-' + message.userName)} 
+                            size={32} 
+                            className="mt-1"
+                          />
+                        </div>
+                      )}
                       <div
                         className={`max-w-xs sm:max-w-md px-4 py-2 rounded-lg ${
                           message.userName === sessionUserName 
@@ -227,6 +242,15 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                           {message.createdAt ? message.createdAt.toLocaleTimeString() : 'Just now'}
                         </div>
                       </div>
+                      {message.userName === sessionUserName && (
+                        <div className="flex-shrink-0 ml-2">
+                          <Avatar 
+                            svgCode={getUserAvatar(id + '-' + message.userName)} 
+                            size={32} 
+                            className="mt-1"
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div ref={messagesEndRef} />
