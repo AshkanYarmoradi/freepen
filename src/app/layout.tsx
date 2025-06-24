@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import AnimatePresenceWrapper from "@/components/ui/AnimatePresenceWrapper";
+import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,6 +63,7 @@ export default function RootLayout({
             {children}
           </AnimatePresenceWrapper>
         </UserProvider>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );
