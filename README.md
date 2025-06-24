@@ -444,9 +444,20 @@ The mobile experience is enhanced with:
 
 ### PWA Technical Details
 
-- **Service Worker**: Manages caching and offline functionality
+- **Service Worker**: Custom implementation that manages caching and offline functionality
 - **Web App Manifest**: Defines app appearance and behavior when installed
+- **Next.js App Router Integration**: Uses Next.js built-in PWA support with metadata API
+- **Offline Page**: Dedicated offline experience when network is unavailable
 - **Lighthouse Score**: Optimized for high performance, accessibility, and PWA scores
+
+### PWA Development
+
+To work with the PWA features:
+
+- The service worker is implemented in `src/app/service-worker.ts`
+- Registration happens via `src/app/ServiceWorkerRegistration.tsx`
+- Build process automatically generates the service worker with `npm run generate-sw`
+- Test PWA functionality with `npm run test-pwa`
 
 ## Frequently Asked Questions
 

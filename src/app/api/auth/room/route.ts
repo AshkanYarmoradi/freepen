@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
       // Log rate limit exceeded event
       await logSecurityEvent(
-        SecurityEventType.RATE_LIMIT_EXCEEDED,
+        SecurityEventType._RATE_LIMIT_EXCEEDED,
         request,
         { endpoint: 'room-auth' }
       );
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     if (session.csrfToken !== csrfToken) {
       // Log CSRF violation
       await logSecurityEvent(
-        SecurityEventType.CSRF_VIOLATION,
+        SecurityEventType._CSRF_VIOLATION,
         request,
         { 
           providedToken: csrfToken,
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
       // Log suspicious activity - attempting to access non-existent room
       await logSecurityEvent(
-        SecurityEventType.SUSPICIOUS_ACTIVITY,
+        SecurityEventType._SUSPICIOUS_ACTIVITY,
         request,
         { 
           roomId,
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
 
       // Log authentication failure
       await logSecurityEvent(
-        SecurityEventType.AUTH_FAILURE,
+        SecurityEventType._AUTH_FAILURE,
         request,
         { 
           roomId,
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
 
     // Log authentication success
     await logSecurityEvent(
-      SecurityEventType.AUTH_SUCCESS,
+      SecurityEventType._AUTH_SUCCESS,
       request,
       { roomId },
       session.userId,

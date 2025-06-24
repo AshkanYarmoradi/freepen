@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       // Log the rate limit exceeded event
       const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
       await logSecurityEvent(
-        SecurityEventType.RATE_LIMIT_EXCEEDED,
+        SecurityEventType._RATE_LIMIT_EXCEEDED,
         request,
         { endpoint: 'messages/send', limit: 20 }
       );
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       // Log the unauthorized access attempt
       const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
       await logSecurityEvent(
-        SecurityEventType.SUSPICIOUS_ACTIVITY,
+        SecurityEventType._SUSPICIOUS_ACTIVITY,
         request,
         { 
           roomId,
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       if (containsSuspiciousContent || sanitizedText !== text) {
         const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
         await logSecurityEvent(
-          SecurityEventType.XSS_ATTEMPT,
+          SecurityEventType._XSS_ATTEMPT,
           request,
           { 
             roomId,

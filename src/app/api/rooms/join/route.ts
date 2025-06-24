@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       // Log the rate limit exceeded event
       const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
       await logSecurityEvent(
-        SecurityEventType.RATE_LIMIT_EXCEEDED,
+        SecurityEventType._RATE_LIMIT_EXCEEDED,
         request,
         { endpoint: 'rooms/join', limit: 10 }
       );
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       // Log the authentication failure
       const { logSecurityEvent, SecurityEventType } = await import('@/lib/security-logger');
       await logSecurityEvent(
-        SecurityEventType.AUTH_FAILURE,
+        SecurityEventType._AUTH_FAILURE,
         request,
         { 
           roomId,

@@ -191,9 +191,9 @@ export default function Home() {
         <AnimatePresence>
           {isLoaded && (
             <>
-              {[...Array(5)].map((_, i) => (
+              {['bg-elem-a', 'bg-elem-b', 'bg-elem-c', 'bg-elem-d', 'bg-elem-e'].map((elemId) => (
                 <motion.div
-                  key={`bg-element-${i}`}
+                  key={elemId}
                   className="absolute rounded-full bg-gradient-to-r from-blue-400/10 to-indigo-400/10"
                   initial={{ 
                     x: `${Math.random() * 100}%`, 
