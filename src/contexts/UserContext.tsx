@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import multiavatar from '@multiavatar/multiavatar/esm';
 
 interface UserContextType {
   userName: string;
@@ -9,6 +10,7 @@ interface UserContextType {
   addAuthenticatedRoom: (_roomId: string) => void;
   isRoomAuthenticated: (_roomId: string) => boolean;
   refreshUserSession: () => Promise<string>;
+  getUserAvatar: (_roomId: string) => string;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -16,10 +18,12 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 // Keys for storing data in localStorage
 const AUTHENTICATED_ROOMS_KEY = 'freepen_authenticated_rooms';
 const USER_NAME_KEY = 'freepen_user_name';
+const USER_AVATARS_KEY = 'freepen_user_avatars';
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState<string>('Anonymous');
   const [authenticatedRooms, setAuthenticatedRooms] = useState<string[]>([]);
+  const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
 
   // Custom setUserName function that also saves to localStorage
   const handleSetUserName = useCallback((name: string) => {
@@ -47,7 +51,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [userName, handleSetUserName]);
 
-  // Load authenticated rooms and userName from localStorage and server on initial render
+  // Load authenticated rooms, userName, and avatars from localStorage and server on initial render
   useEffect(() => {
     const initializeSession = async () => {
       if (typeof window !== 'undefined') {
@@ -65,6 +69,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
         const storedUserName = localStorage.getItem(USER_NAME_KEY);
         if (storedUserName) {
           setUserName(storedUserName);
+        }
+
+        // Load user avatars
+        const storedAvatars = localStorage.getItem(USER_AVATARS_KEY);
+        if (storedAvatars) {
+          try {
+            setUserAvatars(JSON.parse(storedAvatars));
+          } catch (error) {
+            console.error('Error parsing user avatars from localStorage:', error);
+          }
         }
 
         // Fetch session from server to ensure client state is in sync
@@ -103,6 +117,35 @@ export function UserProvider({ children }: { children: ReactNode }) {
     return authenticatedRooms.includes(roomId);
   };
 
+  // Get or generate avatar for user in a specific room
+  const getUserAvatar = useCallback((roomId: string): string => {
+    const avatarKey = `${userName}-${roomId}`;
+
+    // If we already have an avatar for this user in this room, return it
+    if (userAvatars[avatarKey]) {
+      return userAvatars[avatarKey];
+    }
+
+    // Otherwise, generate a new avatar with a consistent seed
+    // We use the avatarKey itself as the seed to ensure consistency
+    const svgCode = multiavatar(avatarKey);
+
+    // Store the new avatar
+    const updatedAvatars = {
+      ...userAvatars,
+      [avatarKey]: svgCode
+    };
+
+    setUserAvatars(updatedAvatars);
+
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(USER_AVATARS_KEY, JSON.stringify(updatedAvatars));
+    }
+
+    return svgCode;
+  }, [userName, userAvatars]);
+
   return (
     <UserContext.Provider value={{ 
       userName, 
@@ -110,7 +153,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       authenticatedRooms, 
       addAuthenticatedRoom, 
       isRoomAuthenticated,
-      refreshUserSession
+      refreshUserSession,
+      getUserAvatar
     }}>
       {children}
     </UserContext.Provider>
