@@ -5,6 +5,7 @@ This directory contains reusable UI components used throughout the freepen appli
 ## Directory Structure
 
 - `/ui`: Basic UI components that form the building blocks of the application interface
+  - `Avatar.tsx`: SVG avatar component that displays user avatars generated with @multiavatar/multiavatar
   - `Button.tsx`: Customizable button component with various styles and states
   - `Input.tsx`: Form input component with validation integration
 
@@ -67,20 +68,33 @@ Import components using absolute imports:
 ```tsx
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Avatar } from '@/components/ui/Avatar';
+import { useUserContext } from '@/contexts/UserContext';
 
-function LoginForm() {
+function UserProfile() {
+  const { userName, getUserAvatar } = useUserContext();
+  const roomId = 'example-room';
+
   return (
-    <form>
-      <Input 
-        label="Email" 
-        type="email" 
-        name="email" 
-        required 
+    <div className="flex items-center">
+      <Avatar 
+        svgCode={getUserAvatar(roomId)} 
+        size={40} 
+        className="mr-2"
       />
-      <Button type="submit">
-        Log In
-      </Button>
-    </form>
+      <div>
+        <h2>{userName}</h2>
+        <Input 
+          label="Email" 
+          type="email" 
+          name="email" 
+          required 
+        />
+        <Button type="submit">
+          Update Profile
+        </Button>
+      </div>
+    </div>
   );
 }
 ```
