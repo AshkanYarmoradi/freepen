@@ -9,6 +9,7 @@ freepen is a secure chat application built with Next.js and Firebase. It allows 
 - **Join Chat Rooms**: Join existing rooms using room ID and password verification
 - **Real-time Messaging**: Send and receive messages in real-time with instant updates
 - **Message History**: Access complete message history when joining a room
+- **User Avatars**: Unique, consistent avatars for each user in each room using @multiavatar/multiavatar
 - **End-to-End Encryption**: Messages are encrypted on the client side before being sent to the server
 - **Secure Communication**: End-to-end message validation and sanitization
 - **Rate Limiting**: Protection against abuse with configurable rate limits
@@ -31,6 +32,7 @@ freepen is a secure chat application built with Next.js and Firebase. It allows 
 - **TypeScript**: For static type checking and improved developer experience
 - **Iron Session**: For secure, encrypted session management
 - **DOMPurify**: For sanitizing user input to prevent XSS attacks
+- **@multiavatar/multiavatar**: For generating unique, consistent SVG avatars
 - **Jest & Testing Library**: For comprehensive testing
 
 ## Getting Started
@@ -392,7 +394,7 @@ The application is tested and supported on the following browsers:
 - [x] Implement end-to-end encryption for messages ✓
 - [x] Enhance mobile experience with PWA features ✓
 - [ ] Add file sharing capabilities
-- [ ] Implement user profiles with avatars
+- [x] Implement user profiles with avatars ✓
 - [ ] Add typing indicators and read receipts
 
 ### Medium-term Goals (3-6 Months)
